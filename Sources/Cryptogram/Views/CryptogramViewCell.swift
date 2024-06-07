@@ -3,7 +3,7 @@ import SnapKit
 import UIKit
 
 protocol CryptogramViewCellSelectionDelegate: AnyObject {
-    func didSelectCryptogramViewCell(_ cryptogramViewCell: CryptogramViewCell)
+    func didSelectCryptogramViewCell(_ cell: CryptogramViewCell)
 }
 
 open class CryptogramViewCell: UIView {
@@ -12,12 +12,13 @@ open class CryptogramViewCell: UIView {
 
     private var codeHeightConstraint: Constraint?
 
+    public var isSelectable: Bool = true
     public var contentView = UIView()
     private var innerContentView = UIView()
 
     private(set) var isSelected = false
 
-    public var margin: UIEdgeInsets = .init(top: 3, left: 3, bottom: 3, right: 3) {
+    public var margin: UIEdgeInsets = .zero {
         didSet {
             if oldValue != margin {
                 updateContentViewConstraints()
@@ -25,7 +26,7 @@ open class CryptogramViewCell: UIView {
         }
     }
 
-    public var padding: UIEdgeInsets = .init(top: 3, left: 3, bottom: 3, right: 3) {
+    public var padding: UIEdgeInsets = .init(top: 3, left: 0, bottom: 3, right: 0) {
         didSet {
             if oldValue != padding {
                 updateContentViewConstraints()
@@ -101,6 +102,7 @@ open class CryptogramViewCell: UIView {
     }
 
     @objc private func handleTap(_ sender: UITapGestureRecognizer) {
+        guard isSelectable else { return }
         selectionDelegate?.didSelectCryptogramViewCell(self)
     }
 
@@ -128,10 +130,11 @@ open class CryptogramViewCell: UIView {
     var selectedStyles = CryptogramViewCellStyles()
     selectedStyles.borderColor = .red
     selectedStyles.borderWidth = 2
-    let viewModel = CryptogramViewCellViewModel(letter: "H", code: "4", styles: CryptogramViewCellStyles(), selectedStyles: selectedStyles)
+    let item = CryptogramItem(id: 1, letter: "H", code: "4", selectable: true, type: .letter)
+    let viewModel = CryptogramViewCellViewModel(item: item)
     let cell = CryptogramViewCell()
     // cell.isSelected = true
-    viewModel.configure(cell: cell)
+    viewModel.configure(cell: cell, isSelected: false)
     cell.padding = UIEdgeInsets(top: 10, left: 10, bottom: 10, right: 10)
     return cell
 }

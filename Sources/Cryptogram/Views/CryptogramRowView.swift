@@ -1,13 +1,13 @@
 import UIKit
 
 protocol CryptogramRowViewDelegate: AnyObject {
-    func cryptogramRowView(_ cryptogramRowView: CryptogramRowView, didSelectItemAt index: Int)
+    func cryptogramRowView(_ cryptogramRowView: CryptogramRowView, didSelectCell cell: CryptogramViewCell, at index: Int)
 }
 
 protocol CryptogramRowViewDataSource: AnyObject {
     func cryptogramRowView(_ cryptogramRowView: CryptogramRowView, numberOfItemsInRow row: Int) -> Int
-    func cryptogramRowView(_ cryptogramRowView: CryptogramRowView, widthForCellInRow row: Int, at index: Int) -> CGFloat
-    func cryptogramRowView(_ cryptogramRowView: CryptogramRowView, cellForRowAt row: Int, at index: Int, reusableCell: CryptogramViewCell?) -> CryptogramViewCell
+    func cryptogramRowView(_ cryptogramRowView: CryptogramRowView, widthForCell cell: CryptogramViewCell, at indexPath: CryptogramIndexPath) -> CGFloat
+    func cryptogramRowView(_ cryptogramRowView: CryptogramRowView, cellForRowAt indexPath: CryptogramIndexPath, reusableCell: CryptogramViewCell?) -> CryptogramViewCell
 }
 
 class CryptogramRowView: UIView, CryptogramViewCellSelectionDelegate {
@@ -53,16 +53,19 @@ class CryptogramRowView: UIView, CryptogramViewCellSelectionDelegate {
         var previousCell: CryptogramViewCell?
 
         for index in 0 ..< numberOfItems {
-            let cell = dataSource.cryptogramRowView(self, cellForRowAt: row, at: index, reusableCell: nil)
+            let indexPath = CryptogramIndexPath(row: row, column: index)
+            let cell = dataSource.cryptogramRowView(self, cellForRowAt: indexPath, reusableCell: nil)
             cell.index = index
             cell.selectionDelegate = self
 
             cells.append(cell)
             containerView.addSubview(cell)
 
+            let width = dataSource.cryptogramRowView(self, widthForCell: cell, at: indexPath)
+
             cell.snp.makeConstraints { make in
                 make.top.bottom.equalToSuperview()
-                make.width.equalTo(dataSource.cryptogramRowView(self, widthForCellInRow: row, at: index))
+                make.width.equalTo(width)
 
                 if let previousCell = previousCell {
                     make.leading.equalTo(previousCell.snp.trailing)
@@ -79,8 +82,8 @@ class CryptogramRowView: UIView, CryptogramViewCellSelectionDelegate {
         }
     }
 
-    func didSelectCryptogramViewCell(_ cryptogramViewCell: CryptogramViewCell) {
-        guard let index = cryptogramViewCell.index else { return }
-        delegate?.cryptogramRowView(self, didSelectItemAt: index)
+    func didSelectCryptogramViewCell(_ cell: CryptogramViewCell) {
+        guard let index = cell.index else { return }
+        delegate?.cryptogramRowView(self, didSelectCell: cell, at: index)
     }
 }

@@ -1,14 +1,40 @@
 import UIKit
+
 public struct CryptogramViewCellStyles {
-    var letterColor: UIColor? = .label
-    var codeColor: UIColor? = .secondaryLabel
-    var separatorColor: UIColor? = .separator
-    var backgroundColor: UIColor? = .systemGray6
-    var cornerRadius: CGFloat = 4
-    var borderWidth: CGFloat = 0
-    var borderColor: UIColor? = .clear
-    var letterFont: UIFont = .systemFont(ofSize: 20, weight: .bold)
-    var codeFont: UIFont = .systemFont(ofSize: 14)
+    public var letterColor: UIColor? = .label
+    public var codeColor: UIColor? = .secondaryLabel
+    public var separatorColor: UIColor? = .separator
+    public var backgroundColor: UIColor? = .clear
+    public var cornerRadius: CGFloat = 7
+    public var borderWidth: CGFloat = 0
+    public var borderColor: UIColor? = .clear
+    public var letterFont: UIFont = .systemFont(ofSize: 20, weight: .bold)
+    public var codeFont: UIFont = .systemFont(ofSize: 13)
 
     public init() {}
+
+    public static var selected: CryptogramViewCellStyles = {
+        var styles = CryptogramViewCellStyles()
+        styles.borderColor = .systemBlue
+        styles.borderWidth = 1.5
+        return styles
+    }()
+
+    public static var normal: CryptogramViewCellStyles = .init()
+
+    public static var punctuation: CryptogramViewCellStyles = {
+        var styles = CryptogramViewCellStyles()
+        styles.letterFont = .systemFont(ofSize: 14, weight: .bold)
+        styles.separatorColor = .clear
+        styles.codeFont = .systemFont(ofSize: 10)
+        return styles
+    }()
+
+    public static var space: CryptogramViewCellStyles = {
+        var styles = CryptogramViewCellStyles()
+        styles.letterFont = .systemFont(ofSize: 14, weight: .bold)
+        styles.separatorColor = .clear
+        styles.codeFont = .systemFont(ofSize: 10)
+        return styles
+    }()
 }

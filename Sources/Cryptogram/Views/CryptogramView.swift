@@ -3,52 +3,45 @@
 
 import UIKit
 
-public protocol CryptogramViewDelegate: AnyObject {
-    func cellSelected(at index: Int, row: Int)
-}
-
-public protocol CryptogramViewDataSource: AnyObject {
-    func numberOfRows(in cryptogramView: CryptogramView) -> Int
-    func cryptogramView(_ cryptogramView: CryptogramView, numberOfItemsInRow row: Int) -> Int
-    func cryptogramView(_ cryptogramView: CryptogramView, heightForRowAt row: Int) -> CGFloat
-    func cryptogramView(_ cryptogramView: CryptogramView, widthForCellInRow row: Int, at index: Int) -> CGFloat
-    func cryptogramView(_ cryptogramView: CryptogramView, cellForRowAt row: Int, at index: Int, reusableCell: CryptogramViewCell?) -> CryptogramViewCell
-}
-
 open class CryptogramView: UIView {
     var rows: [CryptogramRowView] = []
+
+    private var needsReloadData = true
+
+    override open var frame: CGRect {
+        didSet {
+            if frame.size != oldValue.size {
+                needsReloadData = true
+            }
+        }
+    }
+
+    public var selectedIndexPath: CryptogramIndexPath?
 
     public weak var dataSource: CryptogramViewDataSource?
     public weak var delegate: CryptogramViewDelegate?
 
+    override open var intrinsicContentSize: CGSize {
+        CGSize(width: UIView.noIntrinsicMetric, height: rows.reduce(0) { $0 + $1.frame.height })
+    }
+
     open func reloadData() {
         rows.forEach { $0.removeFromSuperview() }
+        rows = []
 
+        // TODO: Update/change rows. And remove the need for layout constraints in them.
         guard let dataSource = dataSource else { return }
 
         let numberOfRows = dataSource.numberOfRows(in: self)
-        var previousRow: CryptogramRowView?
         for row in 0 ..< numberOfRows {
             let rowView = createRow(at: row)
             addSubview(rowView)
-
-            rowView.snp.makeConstraints { make in
-                make.height.equalTo(dataSource.cryptogramView(self, heightForRowAt: row))
-                make.leading.trailing.equalToSuperview()
-
-                if let previousRow = previousRow {
-                    make.top.equalTo(previousRow.snp.bottom)
-                } else {
-                    make.top.equalToSuperview()
-                }
-
-                if row == numberOfRows - 1 {
-                    make.bottom.equalToSuperview()
-                }
-            }
-
-            previousRow = rowView
+            rows.append(rowView)
         }
+
+        alignRows()
+
+        invalidateIntrinsicContentSize()
     }
 
     func createRow(at index: Int) -> CryptogramRowView {
@@ -59,6 +52,68 @@ open class CryptogramView: UIView {
         row.reloadData()
         return row
     }
+
+    func alignRows() {
+        var previousRow: UIView?
+        for (index, row) in rows.enumerated() {
+            row.frame.size.width = frame.width
+            row.frame.size.height = dataSource?.cryptogramView(self, heightForRow: index) ?? 30
+            row.center.x = center.x
+            row.frame.origin.y = previousRow?.frame.maxY ?? 0
+            previousRow = row
+        }
+    }
+
+    func cell(at indexPath: CryptogramIndexPath) -> CryptogramViewCell? {
+        guard indexPath.row < rows.count else { return nil }
+        let row = rows[indexPath.row]
+
+        guard indexPath.column < row.cells.count else { return nil }
+        return row.cells[indexPath.column]
+    }
+
+    override open func layoutSubviews() {
+        super.layoutSubviews()
+        if needsReloadData {
+            reloadData()
+            needsReloadData = false
+        }
+    }
+
+    open func selectCell(at indexPath: CryptogramIndexPath) {
+        guard
+            indexPath != selectedIndexPath,
+            let cell = cell(at: indexPath),
+            cell.isSelectable
+        else {
+            return
+        }
+
+        deselectSelectedCell()
+
+        selectedIndexPath = indexPath
+        didSelectCell(cell, at: indexPath)
+    }
+
+    open func deselectSelectedCell() {
+        guard
+            let indexPath = selectedIndexPath,
+            let cell = cell(at: indexPath)
+        else {
+            return
+        }
+
+        selectedIndexPath = nil
+        didDeselectCell(cell, at: indexPath)
+    }
+
+    open func didDeselectCell(_ cell: CryptogramViewCell, at indexPath: CryptogramIndexPath) {
+        delegate?.cryptogramView(self, didDeselectCell: cell, at: indexPath)
+    }
+
+    open func didSelectCell(_ cell: CryptogramViewCell, at indexPath: CryptogramIndexPath) {
+        delegate?.cryptogramView(self, didSelectCell: cell, at: indexPath)
+    }
 }
 
 extension CryptogramView: CryptogramRowViewDataSource {
@@ -66,53 +121,25 @@ extension CryptogramView: CryptogramRowViewDataSource {
         dataSource?.cryptogramView(self, numberOfItemsInRow: row) ?? 0
     }
 
-    func cryptogramRowView(_ cryptogramRowView: CryptogramRowView, widthForCellInRow row: Int, at index: Int) -> CGFloat {
-        dataSource?.cryptogramView(self, widthForCellInRow: row, at: index) ?? 28
+    func cryptogramRowView(_ cryptogramRowView: CryptogramRowView, widthForCell cell: CryptogramViewCell, at indexPath: CryptogramIndexPath) -> CGFloat {
+        return dataSource?.cryptogramView(self, widthForCell: cell, at: indexPath) ?? 28
     }
 
-    func cryptogramRowView(_ cryptogramRowView: CryptogramRowView, cellForRowAt row: Int, at index: Int, reusableCell: CryptogramViewCell?) -> CryptogramViewCell {
-        return dataSource?.cryptogramView(self, cellForRowAt: row, at: index, reusableCell: nil) ?? CryptogramViewCell()
+    func cryptogramRowView(_ cryptogramRowView: CryptogramRowView, cellForRowAt indexPath: CryptogramIndexPath, reusableCell: CryptogramViewCell?) -> CryptogramViewCell {
+        dataSource?.cryptogramView(self, cellForRowAt: indexPath, reusableCell: reusableCell) ?? CryptogramViewCell()
     }
 }
 
 extension CryptogramView: CryptogramRowViewDelegate {
-    func cryptogramRowView(_ cryptogramRowView: CryptogramRowView, didSelectItemAt index: Int) {
+    func cryptogramRowView(_ cryptogramRowView: CryptogramRowView, didSelectCell cell: CryptogramViewCell, at index: Int) {
         guard let row = cryptogramRowView.row else { return }
-        delegate?.cellSelected(at: index, row: row)
-        print("Selected cell at row \(row), index \(index)")
+        let indexPath = CryptogramIndexPath(row: row, column: index)
+        selectCell(at: indexPath)
     }
 }
 
-private class DataSource: CryptogramViewDataSource {
-    func numberOfRows(in cryptogramView: CryptogramView) -> Int {
-        return 5
-    }
-
-    func cryptogramView(_ cryptogramView: CryptogramView, numberOfItemsInRow row: Int) -> Int {
-        return Int.random(in: 6 ... 15)
-    }
-
-    func cryptogramView(_ cryptogramView: CryptogramView, heightForRowAt row: Int) -> CGFloat {
-        return 60
-    }
-
-    func cryptogramView(_ cryptogramView: CryptogramView, widthForCellInRow row: Int, at index: Int) -> CGFloat {
-        return 28
-    }
-
-    func cryptogramView(_ cryptogramView: CryptogramView, cellForRowAt row: Int, at index: Int, reusableCell: CryptogramViewCell?) -> CryptogramViewCell {
-        let cell = CryptogramViewCell()
-        let viewModel = CryptogramViewCellViewModel(letter: "A", code: "6", styles: CryptogramViewCellStyles(), selectedStyles: CryptogramViewCellStyles())
-        viewModel.configure(cell: cell)
-        return cell
-    }
-}
 
 @available(iOS 17.0, *)
 #Preview {
-    let dataSource = DataSource()
-    let cryptogramView = CryptogramView()
-    cryptogramView.dataSource = dataSource
-    cryptogramView.reloadData()
-    return cryptogramView
+    CryptogramViewController()
 }
