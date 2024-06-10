@@ -62,7 +62,7 @@ open class CryptogramViewManager: CryptogramViewDataSource, CryptogramViewDelega
 public extension CryptogramViewManager {
     convenience init(phrase: String, maxColumnsPerRow: Int, uppercase: Bool = true, cipherMap: [String: String]) {
         let generator = ItemGenerator()
-        let items = generator.items(from: uppercase ? phrase.uppercased() : phrase, cipherMap: cipherMap)
+        let items = generator.items(for: uppercase ? phrase.uppercased() : phrase, cipherMap: cipherMap)
 
         self.init(items: items, maxColumnsPerRow: maxColumnsPerRow)
     }

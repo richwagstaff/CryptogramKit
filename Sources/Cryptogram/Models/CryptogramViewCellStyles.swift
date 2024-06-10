@@ -17,6 +17,7 @@ public struct CryptogramViewCellStyles {
         var styles = CryptogramViewCellStyles()
         styles.borderColor = .systemBlue
         styles.borderWidth = 1.5
+        styles.backgroundColor = .systemYellow.withAlphaComponent(0.1)
         return styles
     }()
 
