@@ -3,11 +3,11 @@ import UIKit
 open class SpaceCryptogramCellViewModel: CryptogramViewCellViewModel {
     override public init(item: CryptogramItem) {
         super.init(item: item)
-        styles = .space
+        styles[.normal] = .space
     }
 
-    override open func configure(cell: CryptogramViewCell, isSelected: Bool) {
-        super.configure(cell: cell, isSelected: isSelected)
+    override open func configure(cell: CryptogramViewCell, state: CryptogramViewCellState) {
+        super.configure(cell: cell, state: state)
         cell.isSelectable = false
     }
 

@@ -3,16 +3,19 @@ import UIKit
 open class CryptogramViewCellViewModel: CryptogramViewCellViewModelProtocol, Chunkable {
     public var isBreakPoint: Bool
     public let item: CryptogramItem
-    public var styles: CryptogramViewCellStyles = .normal
-    public var selectedStyles: CryptogramViewCellStyles = .selected
+    public var styles: [CryptogramViewCellState: CryptogramViewCellStyles] = [
+        .normal: .normal,
+        .selected: .selected,
+        .highlighted: .highlighted
+    ]
 
     public init(item: CryptogramItem) {
         self.item = item
         self.isBreakPoint = item.type == .space
     }
 
-    open func configure(cell: CryptogramViewCell, isSelected: Bool) {
-        let styles = styles(isSelected: isSelected)
+    open func configure(cell: CryptogramViewCell, state: CryptogramViewCellState) {
+        let styles = styles[state] ?? .normal
 
         cell.letterLabel.text = item.letter
         cell.letterLabel.textColor = styles.letterColor
@@ -33,7 +36,8 @@ open class CryptogramViewCellViewModel: CryptogramViewCellViewModelProtocol, Chu
         return min(28, cryptogramView.frame.width / 17)
     }
 
-    open func styles(isSelected: Bool) -> CryptogramViewCellStyles {
-        isSelected ? selectedStyles : styles
+    public func isAssociated(with selectedViewModel: CryptogramViewCellViewModelProtocol) -> Bool {
+        guard let selectedViewModel = selectedViewModel as? CryptogramViewCellViewModel else { return false }
+        return item.code == selectedViewModel.item.code
     }
 }

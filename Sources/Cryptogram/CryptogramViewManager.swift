@@ -3,6 +3,8 @@ import UIKit
 open class CryptogramViewManager: CryptogramViewDataSource, CryptogramViewDelegate {
     public var rows: [[CryptogramViewCellViewModelProtocol]] = []
 
+    public var highlightedCellIndexPaths: [CryptogramIndexPath] = []
+
     public init(
         rows: [[CryptogramViewCellViewModelProtocol]]
     ) {
@@ -39,23 +41,87 @@ open class CryptogramViewManager: CryptogramViewDataSource, CryptogramViewDelega
     }
 
     public func cryptogramView(_ cryptogramView: CryptogramView, cellForRowAt indexPath: CryptogramIndexPath, reusableCell: CryptogramViewCell?) -> CryptogramViewCell {
-        let cell = CryptogramViewCell()
-        let viewModel = item(at: indexPath)
+        let cell = reusableCell ?? CryptogramViewCell()
 
-        let isSelected = cryptogramView.selectedIndexPath == indexPath
+        let state = state(for: indexPath, in: cryptogramView)
+        configure(cell: cell, state: state, at: indexPath)
 
-        viewModel?.configure(cell: cell, isSelected: isSelected)
         return cell
     }
 
     public func cryptogramView(_ cryptogramView: CryptogramView, didDeselectCell cell: CryptogramViewCell, at indexPath: CryptogramIndexPath) {
-        let viewModel = item(at: indexPath)
-        viewModel?.configure(cell: cell, isSelected: false)
+        configure(cell: cell, state: .normal, at: indexPath)
+        deselectHighlightedCells(in: cryptogramView)
     }
 
     public func cryptogramView(_ cryptogramView: CryptogramView, didSelectCell cell: CryptogramViewCell, at indexPath: CryptogramIndexPath) {
+        selectCell(at: indexPath, in: cryptogramView)
+    }
+
+    open func configure(cell: CryptogramViewCell, state: CryptogramViewCellState, at indexPath: CryptogramIndexPath) {
         let viewModel = item(at: indexPath)
-        viewModel?.configure(cell: cell, isSelected: true)
+        viewModel?.configure(cell: cell, state: state)
+    }
+
+    open func state(for indexPath: CryptogramIndexPath, in cryptogramView: CryptogramView) -> CryptogramViewCellState {
+        if indexPath == cryptogramView.selectedIndexPath {
+            return .selected
+        }
+        else if highlightedCellIndexPaths.contains(indexPath) {
+            return .highlighted
+        }
+        else {
+            return .normal
+        }
+    }
+
+    /// Change all the highlighted cells  back to normal
+    open func deselectHighlightedCells(in cryptogramView: CryptogramView) {
+        for indexPath in highlightedCellIndexPaths {
+            guard let cell = cryptogramView.cell(at: indexPath) else { continue }
+            configure(cell: cell, state: .normal, at: indexPath)
+        }
+
+        highlightedCellIndexPaths = []
+    }
+
+    open func selectCell(at indexPath: CryptogramIndexPath, in cryptogramView: CryptogramView) {
+        guard let cell = cryptogramView.cell(at: indexPath) else { return }
+
+        deselectHighlightedCells(in: cryptogramView)
+        highlightCells(associatedWith: indexPath, in: cryptogramView)
+        configure(cell: cell, state: .selected, at: indexPath)
+    }
+
+    open func highlightCell(at indexPath: CryptogramIndexPath, in cryptogramView: CryptogramView) {
+        guard let cell = cryptogramView.cell(at: indexPath) else { return }
+        configure(cell: cell, state: .highlighted, at: indexPath)
+
+        highlightedCellIndexPaths.append(indexPath)
+    }
+
+    public func highlightCells(associatedWith indexPath: CryptogramIndexPath, in cryptogramView: CryptogramView) {
+        let indexPaths = highlightCellIndexPaths(associatedWith: indexPath, in: cryptogramView)
+
+        for indexPath in indexPaths {
+            highlightCell(at: indexPath, in: cryptogramView)
+        }
+    }
+
+    open func highlightCellIndexPaths(associatedWith indexPath: CryptogramIndexPath, in cryptogramView: CryptogramView) -> [CryptogramIndexPath] {
+        guard let selectedViewModel = item(at: indexPath) else { return [] }
+
+        var indexPaths: [CryptogramIndexPath] = []
+        for (rowIndex, row) in rows.enumerated() {
+            for (columnIndex, item) in row.enumerated() {
+                if item.isAssociated(with: selectedViewModel) {
+                    let indexPath = CryptogramIndexPath(row: rowIndex, column: columnIndex)
+                    indexPaths.append(indexPath)
+                }
+            }
+        }
+
+        return indexPaths
     }
 }
 

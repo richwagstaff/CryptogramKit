@@ -38,4 +38,10 @@ public struct CryptogramViewCellStyles {
         styles.codeFont = .systemFont(ofSize: 10)
         return styles
     }()
+
+    public static var highlighted: CryptogramViewCellStyles = {
+        var styles = CryptogramViewCellStyles()
+        styles.backgroundColor = .systemYellow.withAlphaComponent(0.1)
+        return styles
+    }()
 }

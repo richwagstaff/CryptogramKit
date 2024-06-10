@@ -134,7 +134,7 @@ open class CryptogramViewCell: UIView {
     let viewModel = CryptogramViewCellViewModel(item: item)
     let cell = CryptogramViewCell()
     // cell.isSelected = true
-    viewModel.configure(cell: cell, isSelected: false)
+    viewModel.configure(cell: cell, state: .normal)
     cell.padding = UIEdgeInsets(top: 10, left: 10, bottom: 10, right: 10)
     return cell
 }
