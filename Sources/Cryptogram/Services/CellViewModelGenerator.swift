@@ -1,11 +1,11 @@
 import Foundation
 
 open class CellViewModelGenerator {
-    open func viewModels(for items: [CryptogramItem]) -> [CryptogramViewCellViewModel] {
+    open func viewModels(for items: [CryptogramItem]) -> [CryptogramViewCellModel] {
         items.map { item in
             switch item.type {
             case .letter:
-                return CryptogramViewCellViewModel(item: item)
+                return CryptogramViewCellModel(item: item)
             case .punctuation:
                 return PunctuationCryptogramCellViewModel(item: item)
             case .space:
@@ -14,8 +14,8 @@ open class CellViewModelGenerator {
         }
     }
 
-    open func viewModels(for phrase: String, cipherMap: [String: String]) -> [CryptogramViewCellViewModel] {
-        let items = ItemGenerator().items(for: phrase, cipherMap: cipherMap)
+    open func viewModels(for phrase: String, revealed: [String], cipherMap: [String: String]) -> [CryptogramViewCellModel] {
+        let items = ItemGenerator().items(for: phrase, revealed: revealed, cipherMap: cipherMap)
         return viewModels(for: items)
     }
 }

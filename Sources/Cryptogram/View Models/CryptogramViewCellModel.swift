@@ -1,8 +1,10 @@
 import UIKit
 
-open class CryptogramViewCellViewModel: CryptogramViewCellViewModelProtocol, Chunkable {
+open class CryptogramViewCellModel: CryptogramViewCellViewModelProtocol, Chunkable {
     public var isBreakPoint: Bool
-    public let item: CryptogramItem
+    public var isSelectable: Bool
+    public var value: String { item.value }
+    public var item: CryptogramItem
     public var styles: [CryptogramViewCellState: CryptogramViewCellStyles] = [
         .normal: .normal,
         .selected: .selected,
@@ -12,12 +14,13 @@ open class CryptogramViewCellViewModel: CryptogramViewCellViewModelProtocol, Chu
     public init(item: CryptogramItem) {
         self.item = item
         self.isBreakPoint = item.type == .space
+        self.isSelectable = item.selectable
     }
 
     open func configure(cell: CryptogramViewCell, state: CryptogramViewCellState) {
         let styles = styles[state] ?? .normal
 
-        cell.letterLabel.text = item.letter
+        cell.letterLabel.text = item.value
         cell.letterLabel.textColor = styles.letterColor
         cell.letterLabel.font = styles.letterFont
 
@@ -37,7 +40,29 @@ open class CryptogramViewCellViewModel: CryptogramViewCellViewModelProtocol, Chu
     }
 
     public func isAssociated(with selectedViewModel: CryptogramViewCellViewModelProtocol) -> Bool {
-        guard let selectedViewModel = selectedViewModel as? CryptogramViewCellViewModel else { return false }
+        guard let selectedViewModel = selectedViewModel as? CryptogramViewCellModel else { return false }
         return item.code == selectedViewModel.item.code
+    }
+
+    public func fill() {
+        item.value = item.correctValue
+    }
+
+    public func isFilled() -> Bool {
+        !item.value.isEmpty
+    }
+
+    public func isCorrect() -> Bool {
+        item.correctValue == item.value
+    }
+
+    public func isCorrectValue(_ value: String) -> Bool {
+        item.correctValue == value
+    }
+
+    public func setValue(_ value: String, cell: CryptogramViewCell, in cryptogramView: CryptogramView) {
+        item.value = value
+        item.inputtedAt = Date()
+        cell.letterLabel.text = value
     }
 }

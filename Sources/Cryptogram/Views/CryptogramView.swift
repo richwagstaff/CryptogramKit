@@ -6,17 +6,10 @@ import UIKit
 open class CryptogramView: UIView {
     var rows: [CryptogramRowView] = []
 
-    private var needsReloadData = true
-
-    override open var frame: CGRect {
-        didSet {
-            if frame.size != oldValue.size {
-                needsReloadData = true
-            }
-        }
-    }
+    private var oldSize: CGSize = .zero
 
     public var selectedIndexPath: CryptogramIndexPath?
+    public var highlightedIndexPaths: [CryptogramIndexPath] = []
 
     public weak var dataSource: CryptogramViewDataSource?
     public weak var delegate: CryptogramViewDelegate?
@@ -42,6 +35,15 @@ open class CryptogramView: UIView {
         alignRows()
 
         invalidateIntrinsicContentSize()
+    }
+
+    open func reloadCells(at indexPaths: [CryptogramIndexPath]) {
+        guard let dataSource = dataSource else { return }
+
+        for indexPath in indexPaths {
+            guard let cell = cell(at: indexPath) else { continue }
+            _ = dataSource.cryptogramView(self, cellForRowAt: indexPath, reusableCell: cell)
+        }
     }
 
     func createRow(at index: Int) -> CryptogramRowView {
@@ -74,9 +76,10 @@ open class CryptogramView: UIView {
 
     override open func layoutSubviews() {
         super.layoutSubviews()
-        if needsReloadData {
+
+        if oldSize != frame.size {
             reloadData()
-            needsReloadData = false
+            oldSize = frame.size
         }
     }
 
@@ -137,7 +140,6 @@ extension CryptogramView: CryptogramRowViewDelegate {
         selectCell(at: indexPath)
     }
 }
-
 
 @available(iOS 17.0, *)
 #Preview {

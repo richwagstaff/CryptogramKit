@@ -2,13 +2,13 @@ import Foundation
 import SnapKit
 import UIKit
 
-protocol CryptogramViewCellSelectionDelegate: AnyObject {
+protocol CryptogramCellSelectionDelegate: AnyObject {
     func didSelectCryptogramViewCell(_ cell: CryptogramViewCell)
 }
 
 open class CryptogramViewCell: UIView {
     var index: Int?
-    weak var selectionDelegate: CryptogramViewCellSelectionDelegate?
+    weak var selectionDelegate: CryptogramCellSelectionDelegate?
 
     private var codeHeightConstraint: Constraint?
 
@@ -130,8 +130,8 @@ open class CryptogramViewCell: UIView {
     var selectedStyles = CryptogramViewCellStyles()
     selectedStyles.borderColor = .red
     selectedStyles.borderWidth = 2
-    let item = CryptogramItem(id: 1, letter: "H", code: "4", selectable: true, type: .letter)
-    let viewModel = CryptogramViewCellViewModel(item: item)
+    let item = CryptogramItem(id: 1, value: "H", correctValue: "H", code: "4", selectable: true, type: .letter)
+    let viewModel = CryptogramViewCellModel(item: item)
     let cell = CryptogramViewCell()
     // cell.isSelected = true
     viewModel.configure(cell: cell, state: .normal)

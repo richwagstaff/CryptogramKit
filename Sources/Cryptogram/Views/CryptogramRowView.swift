@@ -10,7 +10,7 @@ protocol CryptogramRowViewDataSource: AnyObject {
     func cryptogramRowView(_ cryptogramRowView: CryptogramRowView, cellForRowAt indexPath: CryptogramIndexPath, reusableCell: CryptogramViewCell?) -> CryptogramViewCell
 }
 
-class CryptogramRowView: UIView, CryptogramViewCellSelectionDelegate {
+class CryptogramRowView: UIView, CryptogramCellSelectionDelegate {
     var row: Int?
 
     var cells: [CryptogramViewCell] = []

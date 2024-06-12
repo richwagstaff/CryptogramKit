@@ -1,17 +1,63 @@
 import UIKit
 
-open class CryptogramViewManager: CryptogramViewDataSource, CryptogramViewDelegate {
+public protocol CryptogramViewManagerDelegate: AnyObject {
+    func cryptogramViewManager(_ manager: CryptogramViewManager, didSelectItemAt indexPath: CryptogramIndexPath, in cryptogramView: CryptogramView)
+    func cryptogramViewManager(_ manager: CryptogramViewManager, didModifyItemAt indexPath: CryptogramIndexPath, in cryptogramView: CryptogramView)
+    func cryptogramViewManager(_ manager: CryptogramViewManager, didInputWrongAnswerAt indexPath: CryptogramIndexPath, in cryptogramView: CryptogramView)
+    func cryptogramViewManager(_ manager: CryptogramViewManager, didComplete cryptogramView: CryptogramView)
+}
+
+open class CryptogramViewManager: CryptogramViewDataSource, CryptogramViewDelegate, CryptogramViewSelectionHandlerDelegate, CryptogramViewSelectionHandlerDataSource {
     public var rows: [[CryptogramViewCellViewModelProtocol]] = []
+    public weak var delegate: CryptogramViewManagerDelegate?
+    public lazy var selectionManager: CryptogramViewSelectionManager = {
+        let manager = CryptogramViewSelectionManager()
+        manager.dataSource = self
+        manager.delegate = self
+        return manager
+    }()
 
-    public var highlightedCellIndexPaths: [CryptogramIndexPath] = []
-
-    public init(
-        rows: [[CryptogramViewCellViewModelProtocol]]
-    ) {
+    public init(rows: [[CryptogramViewCellViewModelProtocol]]) {
         self.rows = rows
     }
 
-    func item(at indexPath: CryptogramIndexPath) -> CryptogramViewCellViewModelProtocol? {
+    open func inputCharacter(_ character: String, into cryptogramView: CryptogramView) {
+        guard
+            let indexPath = cryptogramView.selectedIndexPath,
+            let cell = cryptogramView.cell(at: indexPath),
+            let viewModel = item(at: indexPath)
+        else { return }
+
+        if viewModel.isCorrectValue(character) {
+            viewModel.setValue(character, cell: cell, in: cryptogramView)
+
+            let remainingIndexPaths = selectionManager.indexPaths(where: { item in
+                item.isAssociated(with: viewModel)
+            })
+
+            for indexPath in remainingIndexPaths {
+                guard let viewModel = item(at: indexPath) else { continue }
+                viewModel.fill()
+            }
+
+            cryptogramView.reloadCells(at: remainingIndexPaths)
+
+            delegate?.cryptogramViewManager(self, didModifyItemAt: indexPath, in: cryptogramView)
+
+            deselectHighlightedCells(in: cryptogramView)
+            selectNextCell(in: cryptogramView)
+
+            if isCompleted() {
+                delegate?.cryptogramViewManager(self, didComplete: cryptogramView)
+                deselectCell(in: cryptogramView)
+            }
+        }
+        else {
+            delegate?.cryptogramViewManager(self, didInputWrongAnswerAt: indexPath, in: cryptogramView)
+        }
+    }
+
+    open func item(at indexPath: CryptogramIndexPath) -> CryptogramViewCellViewModelProtocol? {
         guard rows.count > indexPath.row else {
             return nil
         }
@@ -67,7 +113,7 @@ open class CryptogramViewManager: CryptogramViewDataSource, CryptogramViewDelega
         if indexPath == cryptogramView.selectedIndexPath {
             return .selected
         }
-        else if highlightedCellIndexPaths.contains(indexPath) {
+        else if cryptogramView.highlightedIndexPaths.contains(indexPath) {
             return .highlighted
         }
         else {
@@ -75,76 +121,78 @@ open class CryptogramViewManager: CryptogramViewDataSource, CryptogramViewDelega
         }
     }
 
-    /// Change all the highlighted cells  back to normal
-    open func deselectHighlightedCells(in cryptogramView: CryptogramView) {
-        for indexPath in highlightedCellIndexPaths {
-            guard let cell = cryptogramView.cell(at: indexPath) else { continue }
-            configure(cell: cell, state: .normal, at: indexPath)
-        }
+    // MARK: - States
 
-        highlightedCellIndexPaths = []
-    }
-
-    open func selectCell(at indexPath: CryptogramIndexPath, in cryptogramView: CryptogramView) {
-        guard let cell = cryptogramView.cell(at: indexPath) else { return }
-
-        deselectHighlightedCells(in: cryptogramView)
-        highlightCells(associatedWith: indexPath, in: cryptogramView)
-        configure(cell: cell, state: .selected, at: indexPath)
-    }
-
-    open func highlightCell(at indexPath: CryptogramIndexPath, in cryptogramView: CryptogramView) {
-        guard let cell = cryptogramView.cell(at: indexPath) else { return }
-        configure(cell: cell, state: .highlighted, at: indexPath)
-
-        highlightedCellIndexPaths.append(indexPath)
-    }
-
-    public func highlightCells(associatedWith indexPath: CryptogramIndexPath, in cryptogramView: CryptogramView) {
-        let indexPaths = highlightCellIndexPaths(associatedWith: indexPath, in: cryptogramView)
-
-        for indexPath in indexPaths {
-            highlightCell(at: indexPath, in: cryptogramView)
-        }
-    }
-
-    open func highlightCellIndexPaths(associatedWith indexPath: CryptogramIndexPath, in cryptogramView: CryptogramView) -> [CryptogramIndexPath] {
-        guard let selectedViewModel = item(at: indexPath) else { return [] }
-
-        var indexPaths: [CryptogramIndexPath] = []
-        for (rowIndex, row) in rows.enumerated() {
-            for (columnIndex, item) in row.enumerated() {
-                if item.isAssociated(with: selectedViewModel) {
-                    let indexPath = CryptogramIndexPath(row: rowIndex, column: columnIndex)
-                    indexPaths.append(indexPath)
+    open func isCompleted() -> Bool {
+        for row in rows {
+            for viewModel in row {
+                if !viewModel.isFilled() {
+                    return false
                 }
             }
         }
 
-        return indexPaths
+        return true
+    }
+
+    // MARK: - Selection Delegate
+
+    public func didSelectCell(at indexPath: CryptogramIndexPath) {}
+
+    // MARK: - Selection
+
+    open func selectCell(at indexPath: CryptogramIndexPath, in cryptogramView: CryptogramView) {
+        selectionManager.selectCell(at: indexPath, in: cryptogramView)
+    }
+
+    open func deselectCell(in cryptogramView: CryptogramView) {
+        selectionManager.deselectCell(in: cryptogramView)
+        deselectHighlightedCells(in: cryptogramView)
+    }
+
+    open func deselectHighlightedCells(in cryptogramView: CryptogramView) {
+        selectionManager.deselectHighlightedCells(in: cryptogramView)
+    }
+
+    open func highlightCell(at indexPath: CryptogramIndexPath, in cryptogramView: CryptogramView) {
+        selectionManager.highlightCell(at: indexPath, in: cryptogramView)
+    }
+
+    public func highlightCells(associatedWith indexPath: CryptogramIndexPath, in cryptogramView: CryptogramView) {
+        selectionManager.highlightCells(associatedWith: indexPath, in: cryptogramView)
+    }
+
+    open func highlightCellIndexPaths(associatedWith indexPath: CryptogramIndexPath, in cryptogramView: CryptogramView) -> [CryptogramIndexPath] {
+        selectionManager.highlightCellIndexPaths(associatedWith: indexPath, in: cryptogramView)
+    }
+
+    open func selectNextCell(in cryptogramView: CryptogramView) {
+        selectionManager.selectNextCell(in: cryptogramView)
+    }
+
+    open func selectPreviousCell(in cryptogramView: CryptogramView) {
+        selectionManager.selectPreviousCell(in: cryptogramView)
+    }
+
+    open func selectFirstCell(in cryptogramView: CryptogramView) {
+        selectionManager.selectFirstCell(in: cryptogramView)
     }
 }
 
 public extension CryptogramViewManager {
-    convenience init(phrase: String, maxColumnsPerRow: Int, uppercase: Bool = true, cipherMap: [String: String]) {
+    convenience init(phrase: String, revealed: [String], maxColumnsPerRow: Int, uppercase: Bool = true, cipherMap: [String: String]) {
         let generator = ItemGenerator()
-        let items = generator.items(for: uppercase ? phrase.uppercased() : phrase, cipherMap: cipherMap)
+        let items = generator.items(for: uppercase ? phrase.uppercased() : phrase, revealed: revealed, cipherMap: cipherMap)
 
         self.init(items: items, maxColumnsPerRow: maxColumnsPerRow)
     }
 
-    convenience init(
-        items: [CryptogramViewCellViewModel],
-        maxColumnsPerRow: Int
-    ) {
+    convenience init(items: [CryptogramViewCellModel], maxColumnsPerRow: Int) {
         let rows = items.chunk(targetChunkSize: maxColumnsPerRow)
         self.init(rows: rows)
     }
 
-    convenience init(
-        items: [CryptogramItem],
-        maxColumnsPerRow: Int
-    ) {
+    convenience init(items: [CryptogramItem], maxColumnsPerRow: Int) {
         let viewModels = CellViewModelGenerator().viewModels(for: items)
         self.init(items: viewModels, maxColumnsPerRow: maxColumnsPerRow)
     }

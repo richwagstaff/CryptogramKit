@@ -1,12 +1,13 @@
 import UIKit
 
-open class PunctuationCryptogramCellViewModel: CryptogramViewCellViewModel {
+open class PunctuationCryptogramCellViewModel: CryptogramViewCellModel {
     override public init(item: CryptogramItem) {
         super.init(item: item)
         styles[.normal] = .punctuation
+        isSelectable = false
     }
 
-    open override func configure(cell: CryptogramViewCell, state: CryptogramViewCellState) {
+    override open func configure(cell: CryptogramViewCell, state: CryptogramViewCellState) {
         super.configure(cell: cell, state: state)
         cell.isSelectable = false
     }

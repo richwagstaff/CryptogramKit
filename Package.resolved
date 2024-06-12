@@ -1,6 +1,15 @@
 {
   "pins" : [
     {
+      "identity" : "keyboardkit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/richwagstaff/KeyboardKit",
+      "state" : {
+        "branch" : "cryptograms",
+        "revision" : "73d21d59a0850e98baa8d9417dbd52ffcaf746f7"
+      }
+    },
+    {
       "identity" : "snapkit",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/SnapKit/SnapKit",

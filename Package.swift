@@ -16,13 +16,14 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/SnapKit/SnapKit", .upToNextMajor(from: "5.7.1")),
+        .package(url: "https://github.com/richwagstaff/KeyboardKit", branch: "cryptograms"),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
         .target(
             name: "Cryptogram",
-            dependencies: ["SnapKit"]),
+            dependencies: ["SnapKit", "KeyboardKit"]),
         .testTarget(
             name: "CryptogramTests",
             dependencies: ["Cryptogram"]),
