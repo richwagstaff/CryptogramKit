@@ -1,30 +1,51 @@
+import Combine
 import KeyboardKit
 import UIKit
 
-open class CryptogramViewController: UIViewController, KeyboardControllerDelegate, CryptogramViewManagerDelegate {
-    lazy var keyboardView = KeyboardView()
+open class CryptogramViewController: UIViewController, KeyboardControllerDelegate, CryptogramGameEngineDelegate {
+    public lazy var keyboardView = KeyboardView()
+    public lazy var scrollView = CenteredScrollView()
+    public lazy var cryptogramView = CryptogramView()
 
     public lazy var keyboardController = KeyboardController(
-        keys: CryptogramKeyboardKeys(disabledKeys: ["A", "Y", "O", "D"]),
+        keys: CryptogramKeyboardKeys(disabledKeys: []),
         sounds: false
     )
 
-    var manager = CryptogramViewManager(
-        phrase: "I have always depended on the kindness of strangers!",
-        revealed: ["A", "Y", "O", "D"],
-        maxColumnsPerRow: 14,
-        cipherMap: Cipher.generateNumberCipherMap()
-    )
+    var manager = CryptogramViewManager(rows: [])
 
-    var cryptogramView = CryptogramView()
+    public var cancellables: Set<AnyCancellable> = []
+
+    lazy var engine: CryptogramGameEngine = {
+        let phrase = "I have always depended on the kindness of strangers!"
+
+        let generator = ItemGenerator()
+        let items = generator.items(for: phrase.uppercased(), revealed: [], cipherMap: Cipher.generateNumberCipherMap())
+
+        return CryptogramGameEngine(items: items)
+    }()
 
     override public func viewDidLoad() {
         super.viewDidLoad()
-        view.addSubview(keyboardView)
+        addSubviews()
 
-        let scrollView = CenteredScrollView()
-        scrollView.contentInset = UIEdgeInsets(top: 20, left: 0, bottom: 20, right: 0)
+        scrollView.contentInset = UIEdgeInsets(top: 20, left: 20, bottom: 20, right: 20)
+
+        cryptogramView.dataSource = manager
+        cryptogramView.delegate = manager
+
+        // manager.delegate = self
+
+        keyboardController.configure(keyboardView)
+        keyboardController.delegate = self
+
+        loadGame()
+    }
+
+    open func addSubviews() {
+        view.addSubview(keyboardView)
         view.addSubview(scrollView)
+        scrollView.addSubview(cryptogramView)
 
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
@@ -34,7 +55,6 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
             scrollView.bottomAnchor.constraint(equalTo: keyboardView.topAnchor)
         ])
 
-        scrollView.addSubview(cryptogramView)
         cryptogramView.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
             cryptogramView.topAnchor.constraint(equalTo: scrollView.topAnchor),
@@ -43,13 +63,6 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
             cryptogramView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
             cryptogramView.widthAnchor.constraint(equalTo: scrollView.widthAnchor)
         ])
-
-        manager.delegate = self
-
-        cryptogramView.dataSource = manager
-        cryptogramView.delegate = manager
-        cryptogramView.reloadData()
-        manager.selectFirstCell(in: cryptogramView)
 
         // TODO: Add intrinsic height to keyboard, but this is going to require a fair bit of reprogramming. Do this later, get keyboard working first
         view.addSubview(keyboardView)
@@ -60,9 +73,57 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
             keyboardView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             keyboardView.heightAnchor.constraint(equalToConstant: 250)
         ])
+    }
 
-        keyboardController.configure(keyboardView)
+    open func loadGame() {
+        manager = CryptogramViewManager(
+            items: CellViewModelGenerator().viewModels(for: engine.items),
+            maxColumnsPerRow: 15
+        )
+
+        cryptogramView.dataSource = manager
+        cryptogramView.delegate = manager
+
+        // This is nasty but it works for now and i can clean it all up later.
+        cryptogramView.selectionManager.dataSource = manager
+        cryptogramView.selectionManager.delegate = manager
+
+        // remove cancellables
+        cancellables.forEach { $0.cancel() }
+        cancellables.removeAll()
+
+        engine.delegate = self
+
+        /* engine.$items
+         .receive(on: RunLoop.main)
+         .sink { [weak self] _ in
+             self?.cryptogramView.reloadData()
+         }
+         .store(in: &cancellables) */
+
+        cryptogramView.reloadData()
         keyboardController.delegate = self
+
+        cryptogramView.selectFirstCell()
+    }
+
+    public func didInputAnswers(into items: [CryptogramItem], engine: CryptogramGameEngine) {
+        let indexPaths = manager.indexPaths(whereIdIn: items.map { $0.id })
+
+        cryptogramView.reloadCells(at: indexPaths)
+        cryptogramView.selectNextCell()
+
+        let keys = items.compactMap { $0.value }
+        setKeyboardButtonsEnabled(false, forKeys: keys)
+    }
+
+    open func setKeyboardButtonEnabled(_ enabled: Bool, forKey key: String) {
+        guard let indexPath = keyboardController.firstIndexPath(whereCharacter: key) else { return }
+        keyboardController.setButtonEnabled(enabled, at: indexPath, keyboardView: keyboardView)
+    }
+
+    open func setKeyboardButtonsEnabled(_ enabled: Bool, forKeys keys: [String]) {
+        keys.forEach { setKeyboardButtonEnabled(enabled, forKey: $0) }
     }
 
     public func didSelectKeyboardKey(_ key: KeyboardKey, button: KeyboardButton, controller: KeyboardController) {
@@ -70,38 +131,36 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
 
         switch keyType {
         case .character:
-            manager.inputCharacter(key.text!, into: cryptogramView)
+            guard
+                let item = manager.selectedItem(in: cryptogramView),
+                let character = key.text
+            else { return }
+
+            engine.makeAttempt(value: character, forItemWithId: item.id)
         case .next:
-            manager.selectNextCell(in: cryptogramView)
+            cryptogramView.selectNextCell()
         case .previous:
-            manager.selectPreviousCell(in: cryptogramView)
+            cryptogramView.selectPreviousCell()
         }
     }
 
-    public func cryptogramViewManager(_ manager: CryptogramViewManager, didModifyItemAt indexPath: CryptogramIndexPath, in cryptogramView: CryptogramView) {
-        guard
-            let value = manager.item(at: indexPath)?.value,
-            let indexPath = keyboardView.firstIndexPathOfButton(withText: value)
-        else {
-            return
-        }
-
-        keyboardController.setButtonEnabled(false, at: indexPath, keyboardView: keyboardView)
+    public func correctAnswerInputted(at indexPath: CryptogramIndexPath, value: String, engine: CryptogramGameEngine) {
+        // let indexPaths = manager.indexPaths(whereIdIn: <#T##[UUID]#>)
+        print("correctAnswerInputted")
     }
 
-    public func cryptogramViewManager(_ manager: CryptogramViewManager, didSelectItemAt indexPath: CryptogramIndexPath, in cryptogramView: CryptogramView) {
-        print("Did select item at \(indexPath)")
+    public func wrongAnswerInputted(at indexPath: CryptogramIndexPath, engine: CryptogramGameEngine) {
+        print("wrongAnswerInputted")
     }
 
-    public func cryptogramViewManager(_ manager: CryptogramViewManager, didInputWrongAnswerAt indexPath: CryptogramIndexPath, in cryptogramView: CryptogramView) {
-        print("Did input wrong answer at \(indexPath)")
+    public func livesDidChange(to lives: Int, enging: CryptogramGameEngine) {
+        print("livesDidChange")
     }
 
-    public func cryptogramViewManager(_ manager: CryptogramViewManager, didComplete cryptogramView: CryptogramView) {
-        print("did complete")
+    public func gameDidComplete(engine: CryptogramGameEngine) {
+        print("gameDidComplete")
     }
 }
-
 
 @available(iOS 17.0, *)
 #Preview {

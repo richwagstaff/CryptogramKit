@@ -3,6 +3,7 @@ import UIKit
 open class CryptogramViewCellModel: CryptogramViewCellViewModelProtocol, Chunkable {
     public var isBreakPoint: Bool
     public var isSelectable: Bool
+    public var id: UUID { item.id }
     public var value: String { item.value }
     public var item: CryptogramItem
     public var styles: [CryptogramViewCellState: CryptogramViewCellStyles] = [

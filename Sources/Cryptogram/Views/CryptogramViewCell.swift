@@ -130,7 +130,7 @@ open class CryptogramViewCell: UIView {
     var selectedStyles = CryptogramViewCellStyles()
     selectedStyles.borderColor = .red
     selectedStyles.borderWidth = 2
-    let item = CryptogramItem(id: 1, value: "H", correctValue: "H", code: "4", selectable: true, type: .letter)
+    let item = CryptogramItem(value: "H", correctValue: "H", code: "4", selectable: true, type: .letter)
     let viewModel = CryptogramViewCellModel(item: item)
     let cell = CryptogramViewCell()
     // cell.isSelected = true

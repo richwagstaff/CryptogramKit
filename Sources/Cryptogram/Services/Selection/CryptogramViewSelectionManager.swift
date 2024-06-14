@@ -1,15 +1,11 @@
 import Foundation
 
-open class CryptogramViewSelectionManager {
+open class CryptogramViewSelectionManager: CryptogramRowHandling {
     public weak var dataSource: CryptogramViewSelectionHandlerDataSource?
     public weak var delegate: CryptogramViewSelectionHandlerDelegate?
 
     public var rows: [[CryptogramViewCellViewModelProtocol]] {
         dataSource?.rows ?? []
-    }
-
-    open func item(at indexPath: CryptogramIndexPath) -> CryptogramViewCellViewModelProtocol? {
-        dataSource?.item(at: indexPath)
     }
 
     open func configure(cell: CryptogramViewCell, state: CryptogramViewCellState, at indexPath: CryptogramIndexPath) {
@@ -39,7 +35,7 @@ open class CryptogramViewSelectionManager {
         guard let cell = cryptogramView.cell(at: indexPath) else { return }
 
         deselectHighlightedCells(in: cryptogramView)
-        highlightCells(associatedWith: indexPath, in: cryptogramView)
+        highlightCells(associatedWithCellAt: indexPath, in: cryptogramView)
         cryptogramView.selectedIndexPath = indexPath
         configure(cell: cell, state: .selected, at: indexPath)
     }
@@ -51,16 +47,16 @@ open class CryptogramViewSelectionManager {
         cryptogramView.highlightedIndexPaths.append(indexPath)
     }
 
-    public func highlightCells(associatedWith indexPath: CryptogramIndexPath, in cryptogramView: CryptogramView) {
-        let indexPaths = highlightCellIndexPaths(associatedWith: indexPath, in: cryptogramView)
+    public func highlightCells(associatedWithCellAt indexPath: CryptogramIndexPath, in cryptogramView: CryptogramView) {
+        let indexPaths = indexPathsToHighlight(selectedCellIndexPath: indexPath, in: cryptogramView)
 
         for indexPath in indexPaths {
             highlightCell(at: indexPath, in: cryptogramView)
         }
     }
 
-    open func highlightCellIndexPaths(associatedWith indexPath: CryptogramIndexPath, in cryptogramView: CryptogramView) -> [CryptogramIndexPath] {
-        indexPaths(associatedWith: indexPath)
+    open func indexPathsToHighlight(selectedCellIndexPath: CryptogramIndexPath, in cryptogramView: CryptogramView) -> [CryptogramIndexPath] {
+        indexPaths(associatedWith: selectedCellIndexPath)
     }
 
     open func indexPaths(associatedWith indexPath: CryptogramIndexPath) -> [CryptogramIndexPath] {
@@ -86,96 +82,5 @@ open class CryptogramViewSelectionManager {
     open func selectFirstCell(in cryptogramView: CryptogramView) {
         guard let indexPath = emptyIndexPaths().first ?? allIndexPaths().first else { return }
         selectCell(at: indexPath, in: cryptogramView)
-    }
-
-    open func indexPath(before indexPath: CryptogramIndexPath) -> CryptogramIndexPath? {
-        arrangedIndexPaths(startingAfter: indexPath, ascending: false).first
-    }
-
-    open func indexPath(after indexPath: CryptogramIndexPath) -> CryptogramIndexPath? {
-        arrangedIndexPaths(startingAfter: indexPath, ascending: true).first
-    }
-
-    open func firstSelectableIndexPath(after indexPath: CryptogramIndexPath, forward: Bool = true) -> CryptogramIndexPath? {
-        let arrangedIndexPaths = arrangedIndexPaths(startingAfter: indexPath, ascending: true)
-
-        return arrangedIndexPaths.first(where: { indexPath in
-            let item = self.item(at: indexPath)
-            return item?.isSelectable == true
-        })
-    }
-
-    open func firstEmptyIndexPath(after indexPath: CryptogramIndexPath, forward: Bool = true) -> CryptogramIndexPath? {
-        let arrangedIndexPaths = arrangedIndexPaths(startingAfter: indexPath, ascending: forward)
-
-        return arrangedIndexPaths.first(where: { indexPath in
-            let item = self.item(at: indexPath)
-            return item?.isFilled() == false && item?.isSelectable == true
-        })
-    }
-
-    open func firstEmptyIndexPath(before indexPath: CryptogramIndexPath) -> CryptogramIndexPath? {
-        firstEmptyIndexPath(after: indexPath, forward: false)
-    }
-
-    open func emptyIndexPaths() -> [CryptogramIndexPath] {
-        indexPaths(where: { $0.isFilled() == false && $0.isSelectable == true })
-    }
-
-    open func allIndexPaths() -> [CryptogramIndexPath] {
-        var indexPaths: [CryptogramIndexPath] = []
-
-        for (rowIndex, row) in rows.enumerated() {
-            for columnIndex in 0 ..< row.count {
-                let indexPath = CryptogramIndexPath(row: rowIndex, column: columnIndex)
-                indexPaths.append(indexPath)
-            }
-        }
-
-        return indexPaths
-    }
-
-    open func arrangedIndexPaths(startingAt indexPath: CryptogramIndexPath, ascending: Bool = true) -> [CryptogramIndexPath] {
-        let indexPaths = allIndexPaths()
-        let sortedIndexPaths = ascending ? indexPaths : indexPaths.reversed()
-
-        guard let startIndex = sortedIndexPaths.firstIndex(of: indexPath) else { return indexPaths }
-        let arrangedIndexPaths = sortedIndexPaths[startIndex ..< sortedIndexPaths.count] + sortedIndexPaths[0 ..< startIndex]
-        return Array(arrangedIndexPaths)
-    }
-
-    public func arrangedIndexPaths(startingAfter indexPath: CryptogramIndexPath, ascending: Bool = true) -> [CryptogramIndexPath] {
-        let indexPaths = arrangedIndexPaths(startingAt: indexPath, ascending: ascending)
-
-        // Move first to last position
-        guard let first = indexPaths.first else { return indexPaths }
-        var arrangedIndexPaths = Array(indexPaths.dropFirst())
-        arrangedIndexPaths.append(first)
-        return arrangedIndexPaths
-    }
-
-    public func indexPathIterator(startingAt indexPath: CryptogramIndexPath? = nil, ascending: Bool = true) -> AnyIterator<CryptogramIndexPath> {
-        let indexPath = indexPath ?? CryptogramIndexPath(row: 0, column: 0)
-        let indexPaths = arrangedIndexPaths(startingAt: indexPath, ascending: ascending)
-        var index = 0
-
-        return AnyIterator {
-            guard index < indexPaths.count else { return nil }
-            defer { index += 1 }
-            return indexPaths[index]
-        }
-    }
-
-    public func indexPaths(where predicate: (CryptogramViewCellViewModelProtocol) -> Bool) -> [CryptogramIndexPath] {
-        var indexPaths: [CryptogramIndexPath] = []
-
-        for path in indexPathIterator() {
-            guard let item = item(at: path) else { continue }
-            if predicate(item) {
-                indexPaths.append(path)
-            }
-        }
-
-        return indexPaths
     }
 }

@@ -6,12 +6,12 @@ open class ItemGenerator {
             let letter = String(letter)
             switch letter {
             case " ":
-                return CryptogramItem(id: 0, value: letter, correctValue: letter, code: "", selectable: false, type: .space)
+                return CryptogramItem(value: letter, correctValue: letter, code: "", selectable: false, type: .space)
             case ".", ",", "!", "?":
-                return CryptogramItem(id: 0, value: letter, correctValue: letter, code: "", selectable: false, type: .punctuation)
+                return CryptogramItem(value: letter, correctValue: letter, code: "", selectable: false, type: .punctuation)
             default:
                 let code = cipherMap[letter] ?? ""
-                return CryptogramItem(id: 0, value: revealed.contains(letter) ? letter : "", correctValue: letter, code: code, selectable: true, type: .letter)
+                return CryptogramItem(value: revealed.contains(letter) ? letter : "", correctValue: letter, code: code, selectable: true, type: .letter)
             }
         }
     }

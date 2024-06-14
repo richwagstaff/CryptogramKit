@@ -1,18 +1,18 @@
-// The Swift Programming Language
-// https://docs.swift.org/swift-book
-
+import Combine
 import UIKit
 
-open class CryptogramView: UIView {
+open class CryptogramView: UIView, ObservableObject {
     var rows: [CryptogramRowView] = []
 
     private var oldSize: CGSize = .zero
 
-    public var selectedIndexPath: CryptogramIndexPath?
-    public var highlightedIndexPaths: [CryptogramIndexPath] = []
+    @Published public var selectedIndexPath: CryptogramIndexPath?
+    @Published public var highlightedIndexPaths: [CryptogramIndexPath] = []
 
     public weak var dataSource: CryptogramViewDataSource?
     public weak var delegate: CryptogramViewDelegate?
+
+    public var selectionManager = CryptogramViewSelectionManager()
 
     override open var intrinsicContentSize: CGSize {
         CGSize(width: UIView.noIntrinsicMetric, height: rows.reduce(0) { $0 + $1.frame.height })
@@ -83,21 +83,22 @@ open class CryptogramView: UIView {
         }
     }
 
-    open func selectCell(at indexPath: CryptogramIndexPath) {
-        guard
-            indexPath != selectedIndexPath,
-            let cell = cell(at: indexPath),
-            cell.isSelectable
-        else {
-            return
-        }
+    /*
+     open func selectCell(at indexPath: CryptogramIndexPath) {
+         guard
+             indexPath != selectedIndexPath,
+             let cell = cell(at: indexPath),
+             cell.isSelectable
+         else {
+             return
+         }
 
-        deselectSelectedCell()
+         deselectSelectedCell()
 
-        selectedIndexPath = indexPath
-        didSelectCell(cell, at: indexPath)
-    }
-
+         selectedIndexPath = indexPath
+         didSelectCell(cell, at: indexPath)
+     }
+     */
     open func deselectSelectedCell() {
         guard
             let indexPath = selectedIndexPath,
@@ -111,10 +112,12 @@ open class CryptogramView: UIView {
     }
 
     open func didDeselectCell(_ cell: CryptogramViewCell, at indexPath: CryptogramIndexPath) {
+        selectionManager.deselectCell(in: self)
         delegate?.cryptogramView(self, didDeselectCell: cell, at: indexPath)
     }
 
     open func didSelectCell(_ cell: CryptogramViewCell, at indexPath: CryptogramIndexPath) {
+        selectionManager.selectCell(at: indexPath, in: self)
         delegate?.cryptogramView(self, didSelectCell: cell, at: indexPath)
     }
 }
