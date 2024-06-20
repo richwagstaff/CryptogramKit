@@ -70,6 +70,10 @@ open class CryptogramViewManager: CryptogramViewDataSource, CryptogramViewDelega
         rows[row].count
     }
 
+    public func rowSpacing(in cryptogramView: CryptogramView) -> CGFloat {
+        8
+    }
+
     public func cryptogramView(_ cryptogramView: CryptogramView, heightForRow row: Int) -> CGFloat {
         60
     }

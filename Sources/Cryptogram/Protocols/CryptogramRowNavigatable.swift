@@ -31,7 +31,7 @@ public extension CryptogramRowHandling {
     }
 
     func firstSelectableIndexPath(after indexPath: CryptogramIndexPath, forward: Bool = true) -> CryptogramIndexPath? {
-        let arrangedIndexPaths = arrangedIndexPaths(startingAfter: indexPath, ascending: true)
+        let arrangedIndexPaths = arrangedIndexPaths(startingAfter: indexPath, ascending: forward)
 
         return arrangedIndexPaths.first(where: { indexPath in
             let item = self.item(at: indexPath)

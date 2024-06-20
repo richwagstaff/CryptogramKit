@@ -60,7 +60,12 @@ open class CryptogramGameEngine: ObservableObject {
     }
 
     open func updateGameState() {
+        let stateBefore = state
         state = determineGameState()
+
+        if state == .completed && stateBefore != .completed {
+            didCompleteGame()
+        }
     }
 
     open func determineGameState() -> CryptogramGameState {
@@ -75,7 +80,7 @@ open class CryptogramGameEngine: ObservableObject {
         }
     }
 
-    open func didCompleteGame(on item: CryptogramItem) {
+    open func didCompleteGame() {
         delegate?.gameDidComplete(engine: self)
     }
 

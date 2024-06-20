@@ -9,7 +9,7 @@ public struct CryptogramViewCellStyles {
     public var borderWidth: CGFloat = 0
     public var borderColor: UIColor? = .clear
     public var letterFont: UIFont = .systemFont(ofSize: 20, weight: .bold)
-    public var codeFont: UIFont = .systemFont(ofSize: 13)
+    public var codeFont: UIFont = .systemFont(ofSize: 15)
 
     public init() {}
 
@@ -17,7 +17,7 @@ public struct CryptogramViewCellStyles {
         var styles = CryptogramViewCellStyles()
         styles.borderColor = .systemBlue
         styles.borderWidth = 1.5
-        styles.backgroundColor = .systemYellow.withAlphaComponent(0.1)
+        styles.backgroundColor = .systemYellow.withAlphaComponent(0.2)
         return styles
     }()
 
@@ -41,7 +41,7 @@ public struct CryptogramViewCellStyles {
 
     public static var highlighted: CryptogramViewCellStyles = {
         var styles = CryptogramViewCellStyles()
-        styles.backgroundColor = .systemYellow.withAlphaComponent(0.1)
+        styles.backgroundColor = .systemYellow.withAlphaComponent(0.2)
         return styles
     }()
 }

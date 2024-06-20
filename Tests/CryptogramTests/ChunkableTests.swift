@@ -5,6 +5,7 @@ final class ChunkableTests: XCTestCase {
     func testTargetChunk() throws {
         let viewModels = CellViewModelGenerator().viewModels(
             for: "I have always depended on the kindness of strangers",
+            revealed: [],
             cipherMap: Cipher.generateNumberCipherMap()
         )
 
@@ -18,6 +19,7 @@ final class ChunkableTests: XCTestCase {
     func testLengthOfSegment() throws {
         let viewModels = CellViewModelGenerator().viewModels(
             for: "I have always depended on the kindness of strangers",
+            revealed: [],
             cipherMap: Cipher.generateNumberCipherMap()
         )
 

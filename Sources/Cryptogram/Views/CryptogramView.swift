@@ -56,12 +56,19 @@ open class CryptogramView: UIView, ObservableObject {
     }
 
     func alignRows() {
+        let spacing = dataSource?.rowSpacing(in: self) ?? 0
+
         var previousRow: UIView?
         for (index, row) in rows.enumerated() {
             row.frame.size.width = frame.width
             row.frame.size.height = dataSource?.cryptogramView(self, heightForRow: index) ?? 30
             row.center.x = center.x
             row.frame.origin.y = previousRow?.frame.maxY ?? 0
+
+            if index > 0 {
+                row.frame.origin.y += spacing
+            }
+
             previousRow = row
         }
     }

@@ -1,6 +1,23 @@
 import Combine
 import KeyboardKit
+import SwiftUI
 import UIKit
+
+open class CryptogramData {
+    public var title: String
+    public var phrase: String
+    public var author: String
+    public var source: String?
+    public var items: [CryptogramItem]
+
+    init(title: String, phrase: String, author: String, source: String? = nil, items: [CryptogramItem]) {
+        self.title = title
+        self.phrase = phrase
+        self.author = author
+        self.source = source
+        self.items = items
+    }
+}
 
 open class CryptogramViewController: UIViewController, KeyboardControllerDelegate, CryptogramGameEngineDelegate {
     public lazy var keyboardView = KeyboardView()
@@ -12,24 +29,35 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
         sounds: false
     )
 
+    public var didComplete: (() -> Void)?
+
+    public var data: CryptogramData?
+
     var manager = CryptogramViewManager(rows: [])
 
     public var cancellables: Set<AnyCancellable> = []
 
     lazy var engine: CryptogramGameEngine = {
-        let phrase = "I have always depended on the kindness of strangers!"
-
-        let generator = ItemGenerator()
-        let items = generator.items(for: phrase.uppercased(), revealed: [], cipherMap: Cipher.generateNumberCipherMap())
-
-        return CryptogramGameEngine(items: items)
+        CryptogramGameEngine(items: data?.items ?? [])
     }()
 
     override public func viewDidLoad() {
         super.viewDidLoad()
+
+        let phrase = "I have always depended on the kindness of strangers"
+        let generator = ItemGenerator()
+
+        data = CryptogramData(
+            title: "Cryptogram #1",
+            phrase: phrase,
+            author: "Tennessee Williams",
+            source: nil,
+            items: generator.items(for: phrase.uppercased(), revealed: [], cipherMap: Cipher.generateNumberCipherMap())
+        )
+
         addSubviews()
 
-        scrollView.contentInset = UIEdgeInsets(top: 20, left: 20, bottom: 20, right: 20)
+        scrollView.contentInset = UIEdgeInsets(top: 20, left: 0, bottom: 20, right: 0)
 
         cryptogramView.dataSource = manager
         cryptogramView.delegate = manager
@@ -158,7 +186,12 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
     }
 
     public func gameDidComplete(engine: CryptogramGameEngine) {
-        print("gameDidComplete")
+        guard let data = data else { return }
+        let completedViewController = UIHostingController(rootView: Completed(title: "Puzzle Completed!", subtitle: data.title, phrase: data.phrase, author: data.author, buttonAction: {
+            print("All done!")
+        }))
+
+        present(completedViewController, animated: true, completion: nil)
     }
 }
 

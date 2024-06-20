@@ -37,7 +37,7 @@ open class CryptogramViewCellModel: CryptogramViewCellViewModelProtocol, Chunkab
     }
 
     public func width(for cell: CryptogramViewCell, in cryptogramView: CryptogramView) -> CGFloat {
-        return min(28, cryptogramView.frame.width / 17)
+        return min(30, cryptogramView.frame.width / 15)
     }
 
     public func isAssociated(with selectedViewModel: CryptogramViewCellViewModelProtocol) -> Bool {
