@@ -1,4 +1,4 @@
-@testable import Cryptogram
+@testable import CryptogramKit
 import XCTest
 
 final class ChunkableTests: XCTestCase {

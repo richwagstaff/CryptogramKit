@@ -5,7 +5,7 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/richwagstaff/KeyboardKit",
       "state" : {
-        "branch" : "cryptograms",
+        "branch" : "main",
         "revision" : "f6285e09f77e61f5c1a0b50acd231c42739d0125"
       }
     },
