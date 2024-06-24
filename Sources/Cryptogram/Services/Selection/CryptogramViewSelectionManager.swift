@@ -83,4 +83,8 @@ open class CryptogramViewSelectionManager: CryptogramRowHandling {
         guard let indexPath = emptyIndexPaths().first ?? allIndexPaths().first else { return }
         selectCell(at: indexPath, in: cryptogramView)
     }
+
+    open func disableSelection() {}
+
+    open func disableHighlights() {}
 }

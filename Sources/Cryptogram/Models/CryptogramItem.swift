@@ -31,4 +31,8 @@ open class CryptogramItem: ObservableObject {
     open func isCorrect(_ value: String) -> Bool {
         return correctValue == value
     }
+
+    public var isCorrect: Bool {
+        return isCorrect(value)
+    }
 }

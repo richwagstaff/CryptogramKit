@@ -1,23 +1,9 @@
 import Combine
 import KeyboardKit
+import PuzzlestarAppUI
+import SnapKit
 import SwiftUI
 import UIKit
-
-open class CryptogramData {
-    public var title: String
-    public var phrase: String
-    public var author: String
-    public var source: String?
-    public var items: [CryptogramItem]
-
-    init(title: String, phrase: String, author: String, source: String? = nil, items: [CryptogramItem]) {
-        self.title = title
-        self.phrase = phrase
-        self.author = author
-        self.source = source
-        self.items = items
-    }
-}
 
 open class CryptogramViewController: UIViewController, KeyboardControllerDelegate, CryptogramGameEngineDelegate {
     public lazy var keyboardView = KeyboardView()
@@ -37,9 +23,13 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
 
     public var cancellables: Set<AnyCancellable> = []
 
-    lazy var engine: CryptogramGameEngine = {
-        CryptogramGameEngine(items: data?.items ?? [])
-    }()
+    @ObservedObject var engine = CryptogramGameEngine(items: [])
+
+    @Published var dots = DotsViewModel(filled: 4, total: 4)
+    @Published var notice = NoticeViewModel(text: "heya")
+
+    private var dotsHostingController: UIHostingController<Dots>?
+    private var noticeHostingController: UIHostingController<Notice>?
 
     override public func viewDidLoad() {
         super.viewDidLoad()
@@ -101,9 +91,23 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
             keyboardView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             keyboardView.heightAnchor.constraint(equalToConstant: 250)
         ])
+
+        let dotsHostingController = UIHostingController(rootView: Dots(model: dots))
+
+        addChild(dotsHostingController)
+        view.addSubview(dotsHostingController.view)
+        dotsHostingController.didMove(toParent: self)
+
+        dotsHostingController.view.snp.makeConstraints { make in
+            make.centerX.equalToSuperview()
+            make.top.equalTo(view.safeAreaLayoutGuide).offset(20)
+        }
+        self.dotsHostingController = dotsHostingController
     }
 
     open func loadGame() {
+        engine.items = data?.items ?? []
+
         manager = CryptogramViewManager(
             items: CellViewModelGenerator().viewModels(for: engine.items),
             maxColumnsPerRow: 15
@@ -122,17 +126,19 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
 
         engine.delegate = self
 
-        /* engine.$items
-         .receive(on: RunLoop.main)
-         .sink { [weak self] _ in
-             self?.cryptogramView.reloadData()
-         }
-         .store(in: &cancellables) */
+        engine.$livesRemaining
+            .dropFirst()
+            .removeDuplicates()
+            .sink { newValue in
+                self.dots.filled = newValue
+            }
+            .store(in: &cancellables)
 
         cryptogramView.reloadData()
         keyboardController.delegate = self
 
         cryptogramView.selectFirstCell()
+        engine.start()
     }
 
     public func didInputAnswers(into items: [CryptogramItem], engine: CryptogramGameEngine) {
@@ -154,6 +160,37 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
         keys.forEach { setKeyboardButtonEnabled(enabled, forKey: $0) }
     }
 
+    open func createCompletedView(data: CryptogramData, success: Bool) -> Completed {
+        Completed(
+            title: success ? "Puzzle Completed!" : "Better Luck Next Time!",
+            subtitle: data.title,
+            phrase: data.phrase,
+            author: data.author,
+            buttonAction: {
+                print("All done!")
+            }
+        )
+    }
+
+    public func gameDidFinish(engine: CryptogramGameEngine, success: Bool) {
+        guard let data = data else { return }
+        let completedView = createCompletedView(data: data, success: success)
+        let hostingController = UIHostingController(rootView: completedView)
+
+        print("Time: \(engine.timeElapsed())")
+        if !success {
+            // TODO: Remove stagger logic from engine, it should be somewhere else
+            engine.revealAllRemainingItems(staggered: true) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                    self.present(hostingController, animated: true, completion: nil)
+                }
+            }
+        }
+        else {
+            present(hostingController, animated: true, completion: nil)
+        }
+    }
+
     public func didSelectKeyboardKey(_ key: KeyboardKey, button: KeyboardButton, controller: KeyboardController) {
         guard let keyType = key.cryptogramKeyType else { return }
 
@@ -172,26 +209,41 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
         }
     }
 
-    public func correctAnswerInputted(at indexPath: CryptogramIndexPath, value: String, engine: CryptogramGameEngine) {
-        // let indexPaths = manager.indexPaths(whereIdIn: <#T##[UUID]#>)
-        print("correctAnswerInputted")
+    public func wrongAnswerInputted(engine: CryptogramGameEngine) {
+        notify("Not quite!")
     }
 
-    public func wrongAnswerInputted(at indexPath: CryptogramIndexPath, engine: CryptogramGameEngine) {
-        print("wrongAnswerInputted")
+    public func notify(_ text: String, hidesAfter delay: TimeInterval = 5) {
+        noticeHostingController?.view?.removeFromSuperview()
+
+        let noticeHostingController = UIHostingController(rootView: Notice(model: notice))
+        addChild(noticeHostingController)
+        view.addSubview(noticeHostingController.view)
+        noticeHostingController.didMove(toParent: self)
+
+        noticeHostingController.view.snp.makeConstraints { make in
+            make.centerX.equalToSuperview()
+            make.top.equalTo(dotsHostingController?.view.snp.bottom ?? view.safeAreaLayoutGuide).offset(20)
+        }
+
+        notice.notify(text)
+        self.noticeHostingController = noticeHostingController
     }
+}
 
-    public func livesDidChange(to lives: Int, enging: CryptogramGameEngine) {
-        print("livesDidChange")
-    }
+open class CryptogramData {
+    public var title: String
+    public var phrase: String
+    public var author: String
+    public var source: String?
+    public var items: [CryptogramItem]
 
-    public func gameDidComplete(engine: CryptogramGameEngine) {
-        guard let data = data else { return }
-        let completedViewController = UIHostingController(rootView: Completed(title: "Puzzle Completed!", subtitle: data.title, phrase: data.phrase, author: data.author, buttonAction: {
-            print("All done!")
-        }))
-
-        present(completedViewController, animated: true, completion: nil)
+    init(title: String, phrase: String, author: String, source: String? = nil, items: [CryptogramItem]) {
+        self.title = title
+        self.phrase = phrase
+        self.author = author
+        self.source = source
+        self.items = items
     }
 }
 

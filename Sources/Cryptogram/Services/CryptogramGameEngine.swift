@@ -2,10 +2,8 @@ import Combine
 import Foundation
 
 public protocol CryptogramGameEngineDelegate: AnyObject {
-    func correctAnswerInputted(at indexPath: CryptogramIndexPath, value: String, engine: CryptogramGameEngine)
-    func wrongAnswerInputted(at indexPath: CryptogramIndexPath, engine: CryptogramGameEngine)
-    func livesDidChange(to lives: Int, enging: CryptogramGameEngine)
-    func gameDidComplete(engine: CryptogramGameEngine)
+    func wrongAnswerInputted(engine: CryptogramGameEngine)
+    func gameDidFinish(engine: CryptogramGameEngine, success: Bool)
     func didInputAnswers(into items: [CryptogramItem], engine: CryptogramGameEngine)
 }
 
@@ -19,13 +17,21 @@ open class CryptogramGameEngine: ObservableObject {
     public weak var delegate: CryptogramGameEngineDelegate?
 
     @Published public var items: [CryptogramItem] = []
-    @Published public var lives: Int = 3
+    @Published public var livesRemaining: Int = 2
+    @Published public var maxLives: Int = 4
     @Published public var state: CryptogramGameState = .active
     @Published public var valuesFound: [String] = []
+    @Published public var isPlaying: Bool = false
+    @Published public var isPaused: Bool = false
+    var time: TimeInterval = 0
 
-    init(items: [CryptogramItem], lives: Int = 3, valuesFound: [String] = []) {
+    private var startedAt: Date?
+    private var pausedAt: Date?
+
+    init(items: [CryptogramItem], lives: Int = 4, maxLives: Int = 4, valuesFound: [String] = []) {
         self.items = items
-        self.lives = lives
+        self.livesRemaining = lives
+        self.maxLives = maxLives
         self.valuesFound = valuesFound
 
         updateGameState()
@@ -40,7 +46,7 @@ open class CryptogramGameEngine: ObservableObject {
             revealAllItemsWithCode(item.code)
         }
         else {
-            removeLife()
+            handleWrongAnswerInputted(value)
         }
 
         updateGameState()
@@ -51,25 +57,31 @@ open class CryptogramGameEngine: ObservableObject {
     open func handleAttemptResult(on item: CryptogramItem, success: Bool) {
         if success {}
         else {
-            lives -= 1
+            livesRemaining -= 1
         }
     }
 
     open func removeLife() {
-        lives -= 1
+        livesRemaining -= 1
+        updateGameState()
     }
 
     open func updateGameState() {
         let stateBefore = state
         state = determineGameState()
 
-        if state == .completed && stateBefore != .completed {
+        guard stateBefore != state else { return }
+
+        if state == .completed {
             didCompleteGame()
+        }
+        else if state == .failed {
+            didFailGame()
         }
     }
 
     open func determineGameState() -> CryptogramGameState {
-        if lives == 0 {
+        if livesRemaining == 0 {
             return .failed
         }
         else if isCompleted() {
@@ -81,7 +93,13 @@ open class CryptogramGameEngine: ObservableObject {
     }
 
     open func didCompleteGame() {
-        delegate?.gameDidComplete(engine: self)
+        stop()
+        delegate?.gameDidFinish(engine: self, success: true)
+    }
+
+    open func didFailGame() {
+        stop()
+        delegate?.gameDidFinish(engine: self, success: false)
     }
 
     func setValue(_ value: String, forItemAt index: Int, updateInputtedAt: Bool) {
@@ -99,8 +117,68 @@ open class CryptogramGameEngine: ObservableObject {
         delegate?.didInputAnswers(into: items, engine: self)
     }
 
+    open func revealAllRemainingItems(staggered: Bool = false, completion: (() -> Void)?) {
+        let items = items.filter { $0.value != $0.correctValue }
+
+        for (index, item) in items.enumerated() {
+            let delay = staggered ? Double(index) * 0.2 : 0
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                item.setValue(item.correctValue, updateInputtedAt: true)
+
+                if staggered {
+                    self.delegate?.didInputAnswers(into: [item], engine: self)
+                }
+
+                if index == items.count - 1 {
+                    completion?()
+                }
+            }
+        }
+
+        if !staggered {
+            delegate?.didInputAnswers(into: items, engine: self)
+        }
+    }
+
+    open func handleWrongAnswerInputted(_ value: String) {
+        removeLife()
+        delegate?.wrongAnswerInputted(engine: self)
+    }
+
     open func isCompleted() -> Bool {
         items.allSatisfy { $0.value == $0.correctValue }
+    }
+
+    public func timeElapsed() -> TimeInterval {
+        guard let startedAt = startedAt else { return time }
+        return time + Date().timeIntervalSince(startedAt)
+    }
+
+    public func start() {
+        startedAt = Date()
+        isPlaying = true
+    }
+
+    public func stop() {
+        time = timeElapsed()
+        startedAt = nil
+        pausedAt = nil
+        isPlaying = false
+        isPaused = false
+    }
+
+    public func pause() {
+        time = timeElapsed()
+        startedAt = nil
+
+        pausedAt = Date()
+        isPaused = true
+    }
+
+    public func resume() {
+        startedAt = Date()
+        pausedAt = nil
+        isPaused = false
     }
 
     /* open func attempt(value: String, forItemWithId id: Int) {

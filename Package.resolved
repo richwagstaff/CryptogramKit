@@ -10,6 +10,15 @@
       }
     },
     {
+      "identity" : "puzzlestarappui",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/richwagstaff/PuzzlestarAppUI",
+      "state" : {
+        "branch" : "main",
+        "revision" : "4bd3440f74ce69a8db4a51998e24a22692007397"
+      }
+    },
+    {
       "identity" : "snapkit",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/SnapKit/SnapKit",
