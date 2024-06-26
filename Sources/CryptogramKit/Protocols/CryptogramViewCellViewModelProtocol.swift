@@ -2,7 +2,7 @@ import Foundation
 
 public protocol CryptogramViewCellViewModelProtocol: Chunkable {
     // Properties
-    var id: UUID { get }
+    var id: String { get }
     var value: String { get }
     var isBreakPoint: Bool { get }
     var isSelectable: Bool { get }

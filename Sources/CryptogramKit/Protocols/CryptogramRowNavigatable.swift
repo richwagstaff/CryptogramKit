@@ -113,11 +113,11 @@ public extension CryptogramRowHandling {
         return indexPaths
     }
 
-    func firstIndexPath(whereId id: UUID) -> CryptogramIndexPath? {
+    func firstIndexPath(whereId id: String) -> CryptogramIndexPath? {
         indexPaths(where: { $0.id == id }).first
     }
 
-    func indexPaths(whereIdIn ids: [UUID]) -> [CryptogramIndexPath] {
+    func indexPaths(whereIdIn ids: [String]) -> [CryptogramIndexPath] {
         indexPaths(where: { item in
             ids.contains(where: { $0 == item.id })
         })

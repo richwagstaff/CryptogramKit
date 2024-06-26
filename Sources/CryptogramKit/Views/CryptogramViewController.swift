@@ -6,6 +6,8 @@ import SwiftUI
 import UIKit
 
 open class CryptogramViewController: UIViewController, KeyboardControllerDelegate, CryptogramGameEngineDelegate {
+    public var dataHandling: CryptogramDataHandling?
+
     public lazy var keyboardView = KeyboardView()
     public lazy var scrollView = CenteredScrollView()
     public lazy var cryptogramView = CryptogramView()
@@ -26,24 +28,13 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
     @ObservedObject var engine = CryptogramGameEngine(items: [])
 
     @Published var dots = DotsViewModel(filled: 4, total: 4)
-    @Published var notice = NoticeViewModel(text: "heya")
+    @Published var notice = NoticeViewModel(text: "")
 
     private var dotsHostingController: UIHostingController<Dots>?
     private var noticeHostingController: UIHostingController<Notice>?
 
     override public func viewDidLoad() {
         super.viewDidLoad()
-
-        let phrase = "I have always depended on the kindness of strangers"
-        let generator = ItemGenerator()
-
-        data = CryptogramData(
-            title: "Cryptogram #1",
-            phrase: phrase,
-            author: "Tennessee Williams",
-            source: nil,
-            items: generator.items(for: phrase.uppercased(), revealed: [], cipherMap: Cipher.generateNumberCipherMap())
-        )
 
         addSubviews()
 
@@ -58,6 +49,12 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
         keyboardController.delegate = self
 
         loadGame()
+
+        view.backgroundColor = .systemBackground
+    }
+
+    override open func viewWillDisappear(_ animated: Bool) {
+        saveData()
     }
 
     open func addSubviews() {
@@ -106,12 +103,24 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
     }
 
     open func loadGame() {
-        engine.items = data?.items ?? []
+        self.data = dataHandling?.loadCryptogramData()
+
+        guard let data = data else { return }
+
+        title = data.title
+
+        engine.items = data.items
+        engine.time = data.time
+        engine.livesRemaining = data.lives
+        engine.maxLives = data.maxLives
 
         manager = CryptogramViewManager(
             items: CellViewModelGenerator().viewModels(for: engine.items),
             maxColumnsPerRow: 15
         )
+
+        dots.filled = engine.livesRemaining
+        dots.total = engine.maxLives
 
         cryptogramView.dataSource = manager
         cryptogramView.delegate = manager
@@ -127,10 +136,10 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
         engine.delegate = self
 
         engine.$livesRemaining
-            .dropFirst()
             .removeDuplicates()
             .sink { newValue in
                 self.dots.filled = newValue
+                self.data?.lives = newValue
             }
             .store(in: &cancellables)
 
@@ -210,7 +219,12 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
     }
 
     public func wrongAnswerInputted(engine: CryptogramGameEngine) {
-        notify("Not quite!")
+        if engine.livesRemaining == 1 {
+            notify("Not quite - one attempt remaining!")
+        }
+        else {
+            notify("Not quite!")
+        }
     }
 
     public func notify(_ text: String, hidesAfter delay: TimeInterval = 5) {
@@ -229,25 +243,19 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
         notice.notify(text)
         self.noticeHostingController = noticeHostingController
     }
-}
 
-open class CryptogramData {
-    public var title: String
-    public var phrase: String
-    public var author: String
-    public var source: String?
-    public var items: [CryptogramItem]
+    open func saveData() {
+        data?.time = engine.timeElapsed()
+        data?.lives = engine.livesRemaining
 
-    init(title: String, phrase: String, author: String, source: String? = nil, items: [CryptogramItem]) {
-        self.title = title
-        self.phrase = phrase
-        self.author = author
-        self.source = source
-        self.items = items
+        guard let data = data else { return }
+        dataHandling?.saveCryptogramData(data: data)
     }
 }
 
 @available(iOS 17.0, *)
 #Preview {
-    CryptogramViewController()
+    let vc = CryptogramViewController()
+    vc.data = .sample()
+    return vc
 }

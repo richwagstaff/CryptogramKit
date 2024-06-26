@@ -1,18 +1,6 @@
 import Combine
 import Foundation
 
-public protocol CryptogramGameEngineDelegate: AnyObject {
-    func wrongAnswerInputted(engine: CryptogramGameEngine)
-    func gameDidFinish(engine: CryptogramGameEngine, success: Bool)
-    func didInputAnswers(into items: [CryptogramItem], engine: CryptogramGameEngine)
-}
-
-public enum CryptogramGameState {
-    case active
-    case completed
-    case failed
-}
-
 open class CryptogramGameEngine: ObservableObject {
     public weak var delegate: CryptogramGameEngineDelegate?
 
@@ -38,7 +26,7 @@ open class CryptogramGameEngine: ObservableObject {
     }
 
     @discardableResult
-    open func makeAttempt(value: String, forItemWithId id: UUID) -> Bool {
+    open func makeAttempt(value: String, forItemWithId id: String) -> Bool {
         guard let item = items.first(where: { $0.id == id }) else { return false }
 
         let success = item.isCorrect(value)
@@ -55,8 +43,7 @@ open class CryptogramGameEngine: ObservableObject {
     }
 
     open func handleAttemptResult(on item: CryptogramItem, success: Bool) {
-        if success {}
-        else {
+        if !success {
             livesRemaining -= 1
         }
     }

@@ -1,15 +1,16 @@
 import Foundation
 
 open class CryptogramItem: ObservableObject {
-    public var id = UUID()
+    public var id: String
     public var value: String
     public var correctValue: String
     public var code: String
     public var selectable: Bool
     public var inputtedAt: Date?
     public var type: CryptogramItemType
+    public var caseSensitive: Bool = false
 
-    public init(id: UUID = UUID(), value: String, correctValue: String, code: String, selectable: Bool, inputtedAt: Date? = nil, type: CryptogramItemType) {
+    public init(id: String, value: String, correctValue: String, code: String, selectable: Bool, inputtedAt: Date?, type: CryptogramItemType) {
         self.id = id
         self.value = value
         self.correctValue = correctValue
@@ -29,7 +30,12 @@ open class CryptogramItem: ObservableObject {
     }
 
     open func isCorrect(_ value: String) -> Bool {
-        return correctValue == value
+        if caseSensitive {
+            return correctValue == value
+        }
+        else {
+            return correctValue.lowercased() == value.lowercased()
+        }
     }
 
     public var isCorrect: Bool {
