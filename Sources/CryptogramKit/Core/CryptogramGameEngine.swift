@@ -11,7 +11,7 @@ open class CryptogramGameEngine: ObservableObject {
     @Published public var valuesFound: [String] = []
     @Published public var isPlaying: Bool = false
     @Published public var isPaused: Bool = false
-    var time: TimeInterval = 0
+    @Published public var time: TimeInterval = 0
 
     private var startedAt: Date?
     private var pausedAt: Date?

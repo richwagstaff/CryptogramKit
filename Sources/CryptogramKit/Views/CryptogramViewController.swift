@@ -25,7 +25,7 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
 
     public var cancellables: Set<AnyCancellable> = []
 
-    @ObservedObject var engine = CryptogramGameEngine(items: [])
+    @ObservedObject public var engine = CryptogramGameEngine(items: [])
 
     @Published var dots = DotsViewModel(filled: 4, total: 4)
     @Published var notice = NoticeViewModel(text: "")
@@ -33,7 +33,7 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
     private var dotsHostingController: UIHostingController<Dots>?
     private var noticeHostingController: UIHostingController<Notice>?
 
-    override public func viewDidLoad() {
+    override open func viewDidLoad() {
         super.viewDidLoad()
 
         addSubviews()
@@ -48,12 +48,15 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
         keyboardController.configure(keyboardView)
         keyboardController.delegate = self
 
+        observeLivesRemaining()
+
         loadGame()
 
         view.backgroundColor = .systemBackground
     }
 
     override open func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
         saveData()
     }
 
@@ -129,25 +132,23 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
         cryptogramView.selectionManager.dataSource = manager
         cryptogramView.selectionManager.delegate = manager
 
-        // remove cancellables
-        cancellables.forEach { $0.cancel() }
-        cancellables.removeAll()
-
         engine.delegate = self
-
-        engine.$livesRemaining
-            .removeDuplicates()
-            .sink { newValue in
-                self.dots.filled = newValue
-                self.data?.lives = newValue
-            }
-            .store(in: &cancellables)
 
         cryptogramView.reloadData()
         keyboardController.delegate = self
 
         cryptogramView.selectFirstCell()
         engine.start()
+    }
+
+    public func observeLivesRemaining() {
+        engine.$livesRemaining
+            .removeDuplicates()
+            .sink { [weak self] newValue in
+                self?.dots.filled = newValue
+                self?.data?.lives = newValue
+            }
+            .store(in: &cancellables)
     }
 
     public func didInputAnswers(into items: [CryptogramItem], engine: CryptogramGameEngine) {
