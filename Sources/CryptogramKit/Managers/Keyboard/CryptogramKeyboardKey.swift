@@ -65,6 +65,7 @@ extension KeyboardKey {
 
     static func next(size: KeyboardButtonSize? = nil, styles: KeyboardButtonStyles? = nil) -> KeyboardKey {
         cryptogramKeyboardKey(
+            text: "Next",
             systemImageName: "chevron.right.2",
             type: .next,
             size: size,
@@ -75,11 +76,21 @@ extension KeyboardKey {
 
     static func previous(size: KeyboardButtonSize? = nil, styles: KeyboardButtonStyles? = nil) -> KeyboardKey {
         cryptogramKeyboardKey(
+            text: "Back",
             systemImageName: "chevron.left.2",
             type: .previous,
             size: size,
             styles: styles,
             systemSoundId: KeyboardSystemSound.click.rawValue
+        )
+    }
+
+    static func blank(size: KeyboardButtonSize? = nil, styles: KeyboardButtonStyles? = nil) -> KeyboardKey {
+        cryptogramKeyboardKey(
+            type: .blank,
+            isEnabled: false,
+            size: size,
+            styles: styles
         )
     }
 }

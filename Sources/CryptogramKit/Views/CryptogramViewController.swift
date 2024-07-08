@@ -23,6 +23,8 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
 
     var manager = CryptogramViewManager(rows: [])
 
+    var isFirstLoad: Bool = true
+
     public var cancellables: Set<AnyCancellable> = []
 
     @ObservedObject public var engine = CryptogramGameEngine(items: [])
@@ -60,6 +62,16 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
         saveData()
     }
 
+    override open func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+
+        if isFirstLoad {
+            isFirstLoad = false
+            reloadKeyboard()
+            keyboardView.setNeedsLayout()
+        }
+    }
+
     open func addSubviews() {
         view.addSubview(keyboardView)
         view.addSubview(scrollView)
@@ -84,13 +96,10 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
 
         // TODO: Add intrinsic height to keyboard, but this is going to require a fair bit of reprogramming. Do this later, get keyboard working first
         view.addSubview(keyboardView)
-        keyboardView.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            keyboardView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            keyboardView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            keyboardView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            keyboardView.heightAnchor.constraint(equalToConstant: 250)
-        ])
+        keyboardView.snp.makeConstraints { make in
+            make.leading.trailing.bottom.equalToSuperview()
+            make.height.equalTo(250)
+        }
 
         let dotsHostingController = UIHostingController(rootView: Dots(model: dots))
 
@@ -216,6 +225,8 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
             cryptogramView.selectNextCell()
         case .previous:
             cryptogramView.selectPreviousCell()
+        case .blank:
+            break
         }
     }
 
@@ -251,6 +262,26 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
 
         guard let data = data else { return }
         dataHandling?.saveCryptogramData(data: data)
+    }
+
+    func reloadKeyboard() {
+        keyboardController.reload(keyboardView: keyboardView)
+        updateKeyboardHeightConstraint()
+        view.setNeedsLayout()
+    }
+
+    func updateKeyboardHeightConstraint() {
+        let keyboardHeight = keyboardController.calculateKeyboardHeight(keyboardView)
+        keyboardView.snp.updateConstraints { make in
+            make.height.equalTo(keyboardHeight)
+        }
+    }
+
+    override open func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        coordinator.animate(alongsideTransition: { _ in
+            // self.outletCrosswordView.updateViewLayout(animated: true)
+            self.reloadKeyboard()
+        })
     }
 }
 

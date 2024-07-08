@@ -5,6 +5,7 @@ public enum CryptogramKeyboardKeyType: String {
     case character
     case next
     case previous
+    case blank
 }
 
 public extension KeyboardKey {

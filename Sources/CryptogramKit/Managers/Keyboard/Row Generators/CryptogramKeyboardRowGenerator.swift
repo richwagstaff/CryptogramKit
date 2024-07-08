@@ -16,8 +16,17 @@ class CryptogramKeyboardRowGenerator: KeyboardRowGenerating {
         self.styles = styles ?? config.buttonStyles
     }
 
-    func row(for type: KeyboardKit.KeyboardRowType) -> KeyboardRow {
-        return compactKeyboardGenerator().row(for: type)
+    func row(for type: KeyboardRowType) -> KeyboardRow {
+        return generator(for: type).row(for: type)
+    }
+
+    func generator(for rowType: KeyboardRowType) -> KeyboardRowGenerating {
+        if let largeConfig = config as? LargeKeyboardConfiguration {
+            return largeKeyboardGenerator(config: largeConfig)
+        }
+        else {
+            return compactKeyboardGenerator()
+        }
     }
 
     func compactKeyboardGenerator() -> KeyboardRowGenerating {
@@ -29,7 +38,7 @@ class CryptogramKeyboardRowGenerator: KeyboardRowGenerating {
     }
 
     func largeKeyboardGenerator(config: LargeKeyboardConfiguration) -> KeyboardRowGenerating {
-        return CompactCryptogramKeyboardRowGenerator(
+        return LargeCryptogramKeyboardRowGenerator(
             config: config,
             sizes: sizes,
             styles: styles
