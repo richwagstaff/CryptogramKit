@@ -193,6 +193,8 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
 
     public func gameDidFinish(engine: CryptogramGameEngine, success: Bool) {
         guard let data = data else { return }
+        saveData()
+
         let completedView = createCompletedView(data: data, success: success)
         let hostingController = UIHostingController(rootView: completedView)
 
@@ -259,6 +261,7 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
     open func saveData() {
         data?.time = engine.timeElapsed()
         data?.lives = engine.livesRemaining
+        data?.completed = engine.isCompleted()
 
         guard let data = data else { return }
         dataHandling?.saveCryptogramData(data: data)

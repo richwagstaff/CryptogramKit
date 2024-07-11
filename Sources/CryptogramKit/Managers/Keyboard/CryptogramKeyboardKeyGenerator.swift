@@ -52,4 +52,8 @@ open class CryptogramKeyboardKeyGenerator {
     func blank(size: KeyboardConfigButtonSizes.SizeType?) -> KeyboardKey {
         .blank(size: keyboardButtonSize(size), styles: styles.accessory)
     }
+
+    func hidden(size: KeyboardConfigButtonSizes.SizeType?) -> KeyboardKey {
+        .blank(hidden: true, size: keyboardButtonSize(size))
+    }
 }

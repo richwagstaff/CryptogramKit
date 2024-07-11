@@ -10,8 +10,9 @@ open class CryptogramData {
     public var lives: Int
     public var maxLives: Int
     public var items: [CryptogramItem]
+    public var completed: Bool
 
-    public init(id: String, title: String, phrase: String, author: String, source: String? = nil, time: TimeInterval, lives: Int, maxLives: Int, items: [CryptogramItem]) {
+    public init(id: String, title: String, phrase: String, author: String, source: String? = nil, time: TimeInterval, lives: Int, maxLives: Int, items: [CryptogramItem], completed: Bool) {
         self.id = id
         self.title = title
         self.phrase = phrase
@@ -21,6 +22,7 @@ open class CryptogramData {
         self.lives = lives
         self.maxLives = maxLives
         self.time = time
+        self.completed = completed
     }
 
     static func sample() -> CryptogramData {
@@ -34,7 +36,8 @@ open class CryptogramData {
             time: 0,
             lives: 3,
             maxLives: 4,
-            items: ItemGenerator().items(for: phrase.uppercased(), revealed: [], cipherMap: Cipher.generateNumberCipherMap())
+            items: ItemGenerator().items(for: phrase.uppercased(), revealed: [], cipherMap: Cipher.generateNumberCipherMap()),
+            completed: false
         )
     }
 }

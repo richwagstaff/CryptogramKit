@@ -85,10 +85,11 @@ extension KeyboardKey {
         )
     }
 
-    static func blank(size: KeyboardButtonSize? = nil, styles: KeyboardButtonStyles? = nil) -> KeyboardKey {
+    static func blank(hidden: Bool = false, size: KeyboardButtonSize? = nil, styles: KeyboardButtonStyles? = nil) -> KeyboardKey {
         cryptogramKeyboardKey(
             type: .blank,
             isEnabled: false,
+            isHidden: hidden,
             size: size,
             styles: styles
         )

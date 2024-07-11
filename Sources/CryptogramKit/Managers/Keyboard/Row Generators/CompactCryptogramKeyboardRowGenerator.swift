@@ -42,7 +42,9 @@ class CompactCryptogramKeyboardRowGenerator: KeyboardRowGenerating {
                 rightKeys: [keys.next(size: .delete)]
             )
         case .spaceBar:
-            return KeyboardRow()
+            return KeyboardRow(
+                centerKeys: [keys.hidden(size: .capsLock)]
+            )
         case .custom:
             return KeyboardRow()
         }
