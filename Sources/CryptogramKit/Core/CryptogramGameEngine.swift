@@ -4,7 +4,12 @@ import Foundation
 open class CryptogramGameEngine: ObservableObject {
     public weak var delegate: CryptogramGameEngineDelegate?
 
-    @Published public var items: [CryptogramItem] = []
+    @Published public var items: [CryptogramItem] = [] {
+        didSet {
+            updateGameState()
+        }
+    }
+
     @Published public var livesRemaining: Int = 2
     @Published public var maxLives: Int = 4
     @Published public var state: CryptogramGameState = .active
@@ -133,7 +138,8 @@ open class CryptogramGameEngine: ObservableObject {
     }
 
     open func isCompleted() -> Bool {
-        items.allSatisfy { $0.value == $0.correctValue }
+        let items = items.filter { $0.type == .letter }
+        return items.filter { $0.type == .letter }.allSatisfy { $0.isCorrect }
     }
 
     public func timeElapsed() -> TimeInterval {
@@ -142,6 +148,10 @@ open class CryptogramGameEngine: ObservableObject {
     }
 
     public func start() {
+        if state.isFinished {
+            return
+        }
+
         startedAt = Date()
         isPlaying = true
     }

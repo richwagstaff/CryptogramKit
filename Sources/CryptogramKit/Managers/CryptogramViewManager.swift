@@ -16,6 +16,14 @@ open class CryptogramViewManager: CryptogramViewDataSource, CryptogramViewDelega
         return manager
     }()
 
+    public func configure(_ cryptogramView: CryptogramView) {
+        cryptogramView.dataSource = self
+        cryptogramView.delegate = self
+
+        cryptogramView.selectionManager.dataSource = self
+        cryptogramView.selectionManager.delegate = self
+    }
+
     func selectedItem(in cryptogramView: CryptogramView) -> CryptogramViewCellViewModelProtocol? {
         guard let indexPath = cryptogramView.selectedIndexPath else { return nil }
         return item(at: indexPath)

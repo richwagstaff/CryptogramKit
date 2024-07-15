@@ -40,4 +40,14 @@ open class CryptogramData {
             completed: false
         )
     }
+
+    open func citation() -> String {
+        var components: [String] = [author]
+
+        if let source = source {
+            components.append(source)
+        }
+
+        return components.joined(separator: " - ")
+    }
 }
