@@ -46,3 +46,9 @@ open class CryptogramItem: ObservableObject {
         return isCorrect(value)
     }
 }
+
+extension Sequence where Element == CryptogramItem {
+    func fillable() -> [CryptogramItem] {
+        filter { $0.isFillable() }
+    }
+}

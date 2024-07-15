@@ -1,36 +1,36 @@
 import Foundation
 
 public extension CryptogramView {
-    func selectCell(at indexPath: CryptogramIndexPath) {
-        selectionManager.selectCell(at: indexPath, in: self)
+    func selectCell(at indexPath: CryptogramIndexPath, animated: Bool) {
+        selectionManager.selectCell(at: indexPath, in: self, animated: animated)
     }
 
-    func deselectCell() {
-        selectionManager.deselectCell(in: self)
-        deselectHighlightedCells()
+    func deselectCell(animated: Bool) {
+        selectionManager.deselectCell(in: self, animated: animated)
+        deselectHighlightedCells(animated: animated)
     }
 
-    func deselectHighlightedCells() {
+    func deselectHighlightedCells(animated: Bool) {
         selectionManager.deselectHighlightedCells(in: self)
     }
 
-    func highlightCell(at indexPath: CryptogramIndexPath) {
+    func highlightCell(at indexPath: CryptogramIndexPath, animated: Bool) {
         selectionManager.highlightCell(at: indexPath, in: self)
     }
 
-    func highlightCells(associatedWithCellAt indexPath: CryptogramIndexPath) {
+    func highlightCells(associatedWithCellAt indexPath: CryptogramIndexPath, animated: Bool) {
         selectionManager.highlightCells(associatedWithCellAt: indexPath, in: self)
     }
 
-    func selectNextCell() {
-        selectionManager.selectNextCell(in: self)
+    func selectNextCell(animated: Bool) {
+        selectionManager.selectNextCell(in: self, animated: animated)
     }
 
-    func selectPreviousCell() {
-        selectionManager.selectPreviousCell(in: self)
+    func selectPreviousCell(animated: Bool) {
+        selectionManager.selectPreviousCell(in: self, animated: animated)
     }
 
-    func selectFirstCell() {
-        selectionManager.selectFirstCell(in: self)
+    func selectFirstCell(animated: Bool) {
+        selectionManager.selectFirstCell(in: self, animated: animated)
     }
 }

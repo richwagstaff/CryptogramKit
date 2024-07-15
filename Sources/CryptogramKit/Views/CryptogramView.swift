@@ -15,7 +15,9 @@ open class CryptogramView: UIView, ObservableObject {
     public var selectionManager = CryptogramViewSelectionManager()
 
     override open var intrinsicContentSize: CGSize {
-        CGSize(width: UIView.noIntrinsicMetric, height: rows.reduce(0) { $0 + $1.frame.height })
+        let totalRowHeight = rows.reduce(0) { $0 + $1.frame.height }
+        let totalSpacing = CGFloat(rows.count - 1) * (dataSource?.rowSpacing(in: self) ?? 0)
+        return CGSize(width: UIView.noIntrinsicMetric, height: totalRowHeight + totalSpacing)
     }
 
     open func reloadData() {
@@ -90,43 +92,27 @@ open class CryptogramView: UIView, ObservableObject {
         }
     }
 
-    /*
-     open func selectCell(at indexPath: CryptogramIndexPath) {
+    /* open func deselectSelectedCell() {
          guard
-             indexPath != selectedIndexPath,
-             let cell = cell(at: indexPath),
-             cell.isSelectable
+             let indexPath = selectedIndexPath,
+             let cell = cell(at: indexPath)
          else {
              return
          }
 
-         deselectSelectedCell()
+         selectedIndexPath = nil
+        // didDeselectCell(cell, at: indexPath)
+     }*/
 
-         selectedIndexPath = indexPath
-         didSelectCell(cell, at: indexPath)
+    /*    open func didDeselectCell(_ cell: CryptogramViewCell, at indexPath: CryptogramIndexPath) {
+         selectionManager.deselectCell(in: self)
+         delegate?.cryptogramView(self, didDeselectCell: cell, at: indexPath)
      }
-     */
-    open func deselectSelectedCell() {
-        guard
-            let indexPath = selectedIndexPath,
-            let cell = cell(at: indexPath)
-        else {
-            return
-        }
 
-        selectedIndexPath = nil
-        didDeselectCell(cell, at: indexPath)
-    }
-
-    open func didDeselectCell(_ cell: CryptogramViewCell, at indexPath: CryptogramIndexPath) {
-        selectionManager.deselectCell(in: self)
-        delegate?.cryptogramView(self, didDeselectCell: cell, at: indexPath)
-    }
-
-    open func didSelectCell(_ cell: CryptogramViewCell, at indexPath: CryptogramIndexPath) {
-        selectionManager.selectCell(at: indexPath, in: self)
-        delegate?.cryptogramView(self, didSelectCell: cell, at: indexPath)
-    }
+     open func didSelectCell(_ cell: CryptogramViewCell, at indexPath: CryptogramIndexPath) {
+         selectionManager.selectCell(at: indexPath, in: self)
+         delegate?.cryptogramView(self, didSelectCell: cell, at: indexPath)
+     }*/
 }
 
 extension CryptogramView: CryptogramRowViewDataSource {
@@ -147,7 +133,7 @@ extension CryptogramView: CryptogramRowViewDelegate {
     func cryptogramRowView(_ cryptogramRowView: CryptogramRowView, didSelectCell cell: CryptogramViewCell, at index: Int) {
         guard let row = cryptogramRowView.row else { return }
         let indexPath = CryptogramIndexPath(row: row, column: index)
-        selectCell(at: indexPath)
+        selectCell(at: indexPath, animated: true)
     }
 }
 

@@ -69,7 +69,7 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
 
         configureKeyboard()
 
-        scrollView.contentInset = UIEdgeInsets(top: 20, left: 0, bottom: 30, right: 0)
+        scrollView.contentInset = UIEdgeInsets(top: 40, left: 0, bottom: 40, right: 0)
     }
 
     func addSubviews() {
@@ -83,7 +83,7 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
 
     func setupConstraints() {
         scrollView.snp.makeConstraints { make in
-            make.top.leading.trailing.equalToSuperview()
+            make.top.leading.trailing.equalTo(view.safeAreaLayoutGuide)
             make.bottom.equalTo(keyboardView.snp.top)
         }
 
@@ -176,12 +176,14 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
 
         cryptogramView.reloadData()
 
-        cryptogramView.selectFirstCell()
+        cryptogramView.selectFirstCell(animated: true)
         engine.start()
 
         if engine.state == .completed || engine.state == .failed {
             showCompleted(true, animated: false)
         }
+
+        reloadKeyboard()
     }
 
     open func saveData() {
@@ -264,9 +266,15 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
     // MARK: - Keyboard Management
 
     func reloadKeyboard() {
+        let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        let inputtedKeys = data?.items.fillable().compactMap { $0.value }
+
         keyboardController.reload(keyboardView: keyboardView)
         updateKeyboardHeightConstraint()
         view.setNeedsLayout()
+
+        setKeyboardButtonsEnabled(true, forKeys: alphabet.map { String($0) })
+        setKeyboardButtonsEnabled(false, forKeys: inputtedKeys ?? [])
     }
 
     func updateKeyboardHeightConstraint() {
@@ -299,9 +307,9 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
 
             engine.makeAttempt(value: character, forItemWithId: item.id)
         case .next:
-            cryptogramView.selectNextCell()
+            cryptogramView.selectNextCell(animated: true)
         case .previous:
-            cryptogramView.selectPreviousCell()
+            cryptogramView.selectPreviousCell(animated: true)
         case .blank:
             break
         }
@@ -327,7 +335,7 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
         let indexPaths = manager.indexPaths(whereIdIn: items.map { $0.id })
 
         cryptogramView.reloadCells(at: indexPaths)
-        cryptogramView.selectNextCell()
+        cryptogramView.selectNextCell(animated: true)
 
         let keys = items.compactMap { $0.value }
         setKeyboardButtonsEnabled(false, forKeys: keys)

@@ -1,6 +1,7 @@
 import Foundation
 
 open class CryptogramViewSelectionManager: CryptogramRowHandling {
+    public var animations = CryptogramAnimations()
     public weak var dataSource: CryptogramViewSelectionHandlerDataSource?
     public weak var delegate: CryptogramViewSelectionHandlerDelegate?
 
@@ -17,7 +18,7 @@ open class CryptogramViewSelectionManager: CryptogramRowHandling {
         configure(cell: cell, state: state, at: indexPath)
     }
 
-    open func deselectCell(in cryptogramView: CryptogramView) {
+    open func deselectCell(in cryptogramView: CryptogramView, animated: Bool) {
         guard let indexPath = cryptogramView.selectedIndexPath else { return }
         setCellState(.normal, at: indexPath, in: cryptogramView)
         cryptogramView.selectedIndexPath = nil
@@ -31,13 +32,18 @@ open class CryptogramViewSelectionManager: CryptogramRowHandling {
         cryptogramView.highlightedIndexPaths = []
     }
 
-    open func selectCell(at indexPath: CryptogramIndexPath, in cryptogramView: CryptogramView) {
+    open func selectCell(at indexPath: CryptogramIndexPath, in cryptogramView: CryptogramView, animated: Bool) {
         guard let cell = cryptogramView.cell(at: indexPath) else { return }
 
+        deselectCell(in: cryptogramView, animated: true)
         deselectHighlightedCells(in: cryptogramView)
         highlightCells(associatedWithCellAt: indexPath, in: cryptogramView)
         cryptogramView.selectedIndexPath = indexPath
         configure(cell: cell, state: .selected, at: indexPath)
+
+        if animated {
+            animations.animateCellSelection(cell)
+        }
     }
 
     open func highlightCell(at indexPath: CryptogramIndexPath, in cryptogramView: CryptogramView) {
@@ -64,11 +70,11 @@ open class CryptogramViewSelectionManager: CryptogramRowHandling {
         return indexPaths(where: { $0.isAssociated(with: selectedViewModel) })
     }
 
-    open func selectPreviousCell(in cryptogramView: CryptogramView) {
-        selectNextCell(in: cryptogramView, forward: false)
+    open func selectPreviousCell(in cryptogramView: CryptogramView, animated: Bool) {
+        selectNextCell(in: cryptogramView, forward: false, animated: animated)
     }
 
-    open func selectNextCell(in cryptogramView: CryptogramView, forward: Bool = true) {
+    open func selectNextCell(in cryptogramView: CryptogramView, forward: Bool = true, animated: Bool) {
         guard
             let selectedIndexPath = cryptogramView.selectedIndexPath,
             let indexPath = firstEmptyIndexPath(after: selectedIndexPath, forward: forward) ?? firstSelectableIndexPath(after: selectedIndexPath, forward: forward)
@@ -76,12 +82,12 @@ open class CryptogramViewSelectionManager: CryptogramRowHandling {
             return
         }
 
-        selectCell(at: indexPath, in: cryptogramView)
+        selectCell(at: indexPath, in: cryptogramView, animated: animated)
     }
 
-    open func selectFirstCell(in cryptogramView: CryptogramView) {
+    open func selectFirstCell(in cryptogramView: CryptogramView, animated: Bool) {
         guard let indexPath = emptyIndexPaths().first ?? allIndexPaths().first else { return }
-        selectCell(at: indexPath, in: cryptogramView)
+        selectCell(at: indexPath, in: cryptogramView, animated: animated)
     }
 
     open func disableSelection() {}
