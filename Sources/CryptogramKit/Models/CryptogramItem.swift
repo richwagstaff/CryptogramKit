@@ -38,6 +38,10 @@ open class CryptogramItem: ObservableObject {
         }
     }
 
+    open func isFillable() -> Bool {
+        type == .letter
+    }
+
     public var isCorrect: Bool {
         return isCorrect(value)
     }

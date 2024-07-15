@@ -110,22 +110,38 @@ open class CryptogramGameEngine: ObservableObject {
     }
 
     open func revealAllRemainingItems(staggered: Bool = false, completion: (() -> Void)?) {
-        let items = items.filter { $0.value != $0.correctValue }
+        let items = items.filter { $0.isFillable() }.filter { $0.value != $0.correctValue }
 
-        for (index, item) in items.enumerated() {
-            let delay = staggered ? Double(index) * 0.2 : 0
-            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+        if staggered {
+            let trigger = ScheduledTrigger(intervals: DefaultScheduledTriggerIntervals(count: items.count))
+            trigger.start { index in
+                guard index < items.count else { return }
+                let item = items[index]
                 item.setValue(item.correctValue, updateInputtedAt: true)
-
-                if staggered {
-                    self.delegate?.didInputAnswers(into: [item], engine: self)
-                }
-
-                if index == items.count - 1 {
-                    completion?()
-                }
+                self.delegate?.didInputAnswers(into: [item], engine: self)
+            } completion: {
+                completion?()
             }
         }
+        else {
+            delegate?.didInputAnswers(into: items, engine: self)
+        }
+
+        /*
+         for (index, item) in items.enumerated() {
+             let delay = staggered ? Double(index) * 0.2 : 0
+             DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                 item.setValue(item.correctValue, updateInputtedAt: true)
+
+                 if staggered {
+                     self.delegate?.didInputAnswers(into: [item], engine: self)
+                 }
+
+                 if index == items.count - 1 {
+                     completion?()
+                 }
+             }
+         }*/
 
         if !staggered {
             delegate?.didInputAnswers(into: items, engine: self)
