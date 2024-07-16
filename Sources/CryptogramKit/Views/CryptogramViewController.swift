@@ -214,7 +214,9 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
     }
 
     public func addCompletedView() {
-        let completedView = CompactCompleted(viewModel: completedViewModel, shareAction: {})
+        let completedView = CompactCompleted(viewModel: completedViewModel, shareAction: { [weak self] in
+            self?.shareResult()
+        })
 
         let hostingController = UIHostingController(rootView: completedView)
         addChild(hostingController)
@@ -372,6 +374,15 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
             // self.outletCrosswordView.updateViewLayout(animated: true)
             self.reloadKeyboard()
         })
+    }
+
+    open func shareResult() {
+        guard let data = data else { return }
+
+        let message = "I just completed the cryptogram '\(data.title)' in \(data.time.formattedTime())! Can you beat my time?"
+        let activityViewController = UIActivityViewController(activityItems: [message], applicationActivities: nil)
+
+        present(activityViewController, animated: true)
     }
 }
 
