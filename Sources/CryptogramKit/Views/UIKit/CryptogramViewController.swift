@@ -42,6 +42,7 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
         configureSubviews()
         configureObservers()
         loadGame()
+        setupNavigationItem()
         view.backgroundColor = .systemBackground
 
         /* showCompleted(true, animated: false)
@@ -104,6 +105,11 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
 
         setCompletedView(hidden: true)
         setCitation(hidden: true)
+    }
+
+    func setupNavigationItem() {
+        let helpButton = UIBarButtonItem(image: UIImage(systemName: "questionmark.circle"), style: .plain, target: self, action: #selector(showInstructions))
+        navigationItem.setRightBarButton(helpButton, animated: true)
     }
 
     func configureKeyboard() {
@@ -263,6 +269,18 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
                 make.bottom.equalTo(completedView?.snp.top ?? keyboardView.snp.top).offset(-8)
             }
         }
+    }
+
+    // MARK: - Actions
+
+    @objc func showInstructions() {
+        let instructions = CryptogramInstructions()
+            .closeBar(alignment: .leading) { [weak self] in
+                self?.dismiss(animated: true)
+            }
+
+        let hostingController = UIHostingController(rootView: instructions)
+        present(hostingController, animated: true)
     }
 
     // MARK: - Keyboard Management

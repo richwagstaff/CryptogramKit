@@ -22,6 +22,8 @@ open class CryptogramViewManager: CryptogramViewDataSource, CryptogramViewDelega
 
         cryptogramView.selectionManager.dataSource = self
         cryptogramView.selectionManager.delegate = self
+
+        cryptogramView.invalidateIntrinsicContentSize()
     }
 
     func selectedItem(in cryptogramView: CryptogramView) -> CryptogramViewCellViewModelProtocol? {
@@ -103,7 +105,7 @@ open class CryptogramViewManager: CryptogramViewDataSource, CryptogramViewDelega
 }
 
 public extension CryptogramViewManager {
-    convenience init(phrase: String, revealed: [String], maxColumnsPerRow: Int, uppercase: Bool = true, cipherMap: [String: String]) {
+    convenience init(phrase: String, revealed: [String], maxColumnsPerRow: Int = 15, uppercase: Bool = true, cipherMap: [String: String]) {
         let generator = ItemGenerator()
         let items = generator.items(for: uppercase ? phrase.uppercased() : phrase, revealed: revealed, cipherMap: cipherMap)
 
