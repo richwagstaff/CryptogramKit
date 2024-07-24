@@ -10,9 +10,10 @@ open class CryptogramData {
     public var lives: Int
     public var maxLives: Int
     public var items: [CryptogramItem]
+    public var cipherMap: [String: String]
     public var completed: Bool
 
-    public init(id: String, title: String, phrase: String, author: String, source: String? = nil, time: TimeInterval, lives: Int, maxLives: Int, items: [CryptogramItem], completed: Bool) {
+    public init(id: String, title: String, phrase: String, author: String, source: String? = nil, time: TimeInterval, lives: Int, maxLives: Int, items: [CryptogramItem], cipherMap: [String: String], completed: Bool) {
         self.id = id
         self.title = title
         self.phrase = phrase
@@ -22,11 +23,13 @@ open class CryptogramData {
         self.lives = lives
         self.maxLives = maxLives
         self.time = time
+        self.cipherMap = cipherMap
         self.completed = completed
     }
 
     static func sample() -> CryptogramData {
         let phrase = "I have always depended on the kindness of strangers"
+        let cipherMap = Cipher.generateNumberCipherMap()
         return CryptogramData(
             id: "1",
             title: "Cryptogram #1",
@@ -36,7 +39,8 @@ open class CryptogramData {
             time: 0,
             lives: 3,
             maxLives: 4,
-            items: ItemGenerator().items(for: phrase.uppercased(), revealed: [], cipherMap: Cipher.generateNumberCipherMap()),
+            items: ItemGenerator().items(for: phrase.uppercased(), solved: [], cipherMap: cipherMap),
+            cipherMap: cipherMap,
             completed: false
         )
     }

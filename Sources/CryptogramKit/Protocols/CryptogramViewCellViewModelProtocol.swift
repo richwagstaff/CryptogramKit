@@ -14,9 +14,7 @@ public protocol CryptogramViewCellViewModelProtocol: Chunkable {
     func width(for cell: CryptogramViewCell, in cryptogramView: CryptogramView) -> CGFloat
 
     // State Handling
-    func fill()
     func isFilled() -> Bool
-    func setValue(_ value: String, cell: CryptogramViewCell, in cryptogramView: CryptogramView)
 
     // Validation
     func isAssociated(with selectedViewModel: CryptogramViewCellViewModelProtocol) -> Bool

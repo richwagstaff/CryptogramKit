@@ -4,6 +4,8 @@ import UIKit
 open class CryptogramView: UIView, ObservableObject {
     var rows: [CryptogramRowView] = []
 
+    public var animations = CryptogramAnimations()
+
     private var oldSize: CGSize = .zero
 
     @Published public var selectedIndexPath: CryptogramIndexPath?
@@ -81,6 +83,10 @@ open class CryptogramView: UIView, ObservableObject {
 
         guard indexPath.column < row.cells.count else { return nil }
         return row.cells[indexPath.column]
+    }
+
+    func cells(at indexPaths: [CryptogramIndexPath]) -> [CryptogramViewCell] {
+        indexPaths.compactMap { cell(at: $0) }
     }
 
     override open func layoutSubviews() {

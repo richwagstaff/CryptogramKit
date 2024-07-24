@@ -20,8 +20,7 @@ open class CryptogramViewManager: CryptogramViewDataSource, CryptogramViewDelega
         cryptogramView.dataSource = self
         cryptogramView.delegate = self
 
-        cryptogramView.selectionManager.dataSource = self
-        cryptogramView.selectionManager.delegate = self
+        cryptogramView.selectionManager = selectionManager
 
         cryptogramView.invalidateIntrinsicContentSize()
     }
@@ -107,7 +106,7 @@ open class CryptogramViewManager: CryptogramViewDataSource, CryptogramViewDelega
 public extension CryptogramViewManager {
     convenience init(phrase: String, revealed: [String], maxColumnsPerRow: Int = 15, uppercase: Bool = true, cipherMap: [String: String]) {
         let generator = ItemGenerator()
-        let items = generator.items(for: uppercase ? phrase.uppercased() : phrase, revealed: revealed, cipherMap: cipherMap)
+        let items = generator.items(for: uppercase ? phrase.uppercased() : phrase, solved: revealed, cipherMap: cipherMap)
 
         self.init(items: items, maxColumnsPerRow: maxColumnsPerRow)
     }

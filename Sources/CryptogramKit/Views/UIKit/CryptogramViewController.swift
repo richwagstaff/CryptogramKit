@@ -287,14 +287,16 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
 
     func reloadKeyboard() {
         let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        let inputtedKeys = data?.items.fillable().compactMap { $0.value }
 
         keyboardController.reload(keyboardView: keyboardView)
         updateKeyboardHeightConstraint()
         view.setNeedsLayout()
 
         setKeyboardButtonsEnabled(true, forKeys: alphabet.map { String($0) })
-        setKeyboardButtonsEnabled(false, forKeys: inputtedKeys ?? [])
+
+        guard let selectedItem = selectedItem() else { return }
+        let solvedKeys = keyboardKeysToDisable(forItem: selectedItem)
+        setKeyboardButtonsEnabled(false, forKeys: solvedKeys)
     }
 
     func updateKeyboardHeightConstraint() {
@@ -356,9 +358,6 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
 
         cryptogramView.reloadCells(at: indexPaths)
         cryptogramView.selectNextCell(animated: true)
-
-        let keys = items.compactMap { $0.value }
-        setKeyboardButtonsEnabled(false, forKeys: keys)
     }
 
     public func wrongAnswerInputted(engine: CryptogramGameEngine) {
@@ -368,6 +367,19 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
         else {
             notify("Not quite!")
         }
+    }
+
+    public func didSolveCode(_ code: String, engine: CryptogramGameEngine) {
+        let items = engine.items.filter { $0.code == code }
+        let itemIds = items.map { $0.id }
+        let indexPaths = manager.indexPaths(whereIdIn: itemIds)
+
+        cryptogramView.reloadCells(at: indexPaths)
+
+        let cells = cryptogramView.cells(at: indexPaths)
+        cryptogramView.animations.animateCodeSolved(cells)
+
+        reloadKeyboard()
     }
 
     public func notify(_ text: String, hidesAfter delay: TimeInterval = 5) {
@@ -401,6 +413,15 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
         let activityViewController = UIActivityViewController(activityItems: [message], applicationActivities: nil)
 
         present(activityViewController, animated: true)
+    }
+
+    open func selectedItem() -> CryptogramItem? {
+        guard let selectedViewItem = manager.selectedItem(in: cryptogramView) else { return nil }
+        return engine.items.first(where: { $0.id == selectedViewItem.id })
+    }
+
+    open func keyboardKeysToDisable(forItem item: CryptogramItem) -> [String] {
+        return engine.items.solvedCharacters(cipherMap: data?.cipherMap ?? [:])
     }
 }
 

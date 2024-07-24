@@ -2,24 +2,21 @@ import Foundation
 
 open class Cipher {
     public static func generateNumberCipherMap() -> [String: String] {
-        var cipherMap: [String: String] = [:]
         let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        let shuffled = alphabet.shuffled()
 
-        for (i, char) in shuffled.enumerated() {
-            cipherMap[String(char)] = String(i + 1)
+        var cipherMap: [String: String] = [:]
+        for (i, char) in alphabet.shuffled().enumerated() {
+            cipherMap[String(i + 1)] = String(char)
         }
-
-        print(cipherMap)
 
         return cipherMap
     }
 
     public static var cipherMap1: [String: String] {
-        ["X": "24", "B": "2", "L": "20", "K": "25", "P": "13", "E": "14", "Z": "11", "W": "3", "N": "22", "S": "8", "Y": "18", "H": "1", "V": "10", "G": "26", "J": "6", "I": "15", "A": "7", "M": "16", "Q": "12", "U": "21", "D": "17", "C": "19", "F": "9", "R": "4", "O": "23", "T": "5"]
+        ["24": "X", "2": "B", "20": "L", "25": "K", "13": "P", "14": "E", "11": "Z", "3": "W", "22": "N", "8": "S", "18": "Y", "1": "H", "10": "V", "26": "G", "6": "J", "15": "I", "7": "A", "16": "M", "12": "Q", "21": "U", "17": "D", "19": "C", "9": "F", "4": "R", "23": "O", "5": "T"]
     }
 
     public static var cipherMap2: [String: String] {
-        ["E": "1", "C": "9", "S": "25", "U": "17", "N": "8", "O": "21", "B": "19", "J": "2", "V": "3", "R": "15", "Z": "23", "D": "5", "M": "18", "I": "12", "P": "22", "K": "16", "A": "11", "T": "6", "Q": "13", "F": "7", "W": "20", "H": "14", "Y": "26", "G": "10", "X": "4", "L": "24"]
+        ["1": "E", "9": "C", "25": "S", "17": "U", "8": "N", "21": "O", "19": "B", "2": "J", "3": "V", "15": "R", "23": "Z", "5": "D", "18": "M", "12": "I", "22": "P", "16": "K", "11": "A", "6": "T", "13": "Q", "7": "F", "20": "W", "14": "H", "26": "Y", "10": "G", "4": "X", "24": "L"]
     }
 }

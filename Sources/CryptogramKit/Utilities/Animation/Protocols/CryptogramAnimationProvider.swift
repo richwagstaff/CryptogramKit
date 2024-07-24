@@ -2,6 +2,7 @@ import Foundation
 import QuartzCore
 
 protocol CryptogramAnimationProvider {
-    func createSelectionAnimation(delay: TimeInterval) -> CAAnimation
-    func createDeselectionAnimation(delay: TimeInterval) -> CAAnimation
+    func createSelectionAnimation() -> CAAnimation
+    func createDeselectionAnimation() -> CAAnimation
+    func createCodeSolvedAnimation() -> CAAnimation
 }

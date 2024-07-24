@@ -7,27 +7,30 @@ open class CryptogramGameEngine: ObservableObject {
     @Published public var items: [CryptogramItem] = [] {
         didSet {
             updateGameState()
+            updateSolvedCodes()
         }
     }
 
     @Published public var livesRemaining: Int = 2
     @Published public var maxLives: Int = 4
     @Published public var state: CryptogramGameState = .active
-    @Published public var valuesFound: [String] = []
+    @Published public var solvedCodes: Set<String> = []
     @Published public var isPlaying: Bool = false
     @Published public var isPaused: Bool = false
     @Published public var time: TimeInterval = 0
 
+    public var hideCodesWhenSolved = true
+
     private var startedAt: Date?
     private var pausedAt: Date?
 
-    init(items: [CryptogramItem], lives: Int = 4, maxLives: Int = 4, valuesFound: [String] = []) {
+    init(items: [CryptogramItem], lives: Int = 4, maxLives: Int = 4) {
         self.items = items
         self.livesRemaining = lives
         self.maxLives = maxLives
-        self.valuesFound = valuesFound
 
         updateGameState()
+        updateSolvedCodes()
     }
 
     @discardableResult
@@ -36,13 +39,15 @@ open class CryptogramGameEngine: ObservableObject {
 
         let success = item.isCorrect(value)
         if success {
-            revealAllItemsWithCode(item.code)
+            item.setValue(item.correctValue, updateInputtedAt: true)
+            delegate?.didInputAnswers(into: [item], engine: self)
         }
         else {
             handleWrongAnswerInputted(value)
         }
 
         updateGameState()
+        updateSolvedCodes()
 
         return success
     }
@@ -126,25 +131,26 @@ open class CryptogramGameEngine: ObservableObject {
         else {
             delegate?.didInputAnswers(into: items, engine: self)
         }
+    }
 
-        /*
-         for (index, item) in items.enumerated() {
-             let delay = staggered ? Double(index) * 0.2 : 0
-             DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-                 item.setValue(item.correctValue, updateInputtedAt: true)
+    open func updateSolvedCodes() {
+        let previousSolvedCodes = solvedCodes
 
-                 if staggered {
-                     self.delegate?.didInputAnswers(into: [item], engine: self)
-                 }
+        solvedCodes = items.solvedCodes()
 
-                 if index == items.count - 1 {
-                     completion?()
-                 }
-             }
-         }*/
+        if hideCodesWhenSolved {
+            for item in items {
+                if !item.codeHidden && solvedCodes.contains(item.code) {
+                    item.setCodeHidden(true)
+                }
+            }
+        }
 
-        if !staggered {
-            delegate?.didInputAnswers(into: items, engine: self)
+        if previousSolvedCodes != solvedCodes {
+            let codesNewlySolved = solvedCodes.filter { !previousSolvedCodes.contains($0) }
+            for code in codesNewlySolved {
+                delegate?.didSolveCode(code, engine: self)
+            }
         }
     }
 
@@ -193,74 +199,4 @@ open class CryptogramGameEngine: ObservableObject {
         pausedAt = nil
         isPaused = false
     }
-
-    /* open func attempt(value: String, forItemWithId id: Int) {
-         guard let index = items.firstIndex(where: { $0.id == id }) else { return }
-
-         let item = items[index]
-         if item.value == item.correctValue {
-             items[index].value = value
-             revealItemValuesForCode(item.code)
-
-             if isCompleted() {
-                 delegate?.gameDidComplete(gameController: self)
-             }
-         }
-         else {
-             attemptDidFail()
-         }
-
-         /*  guard
-              let indexPath = cryptogramView.selectedIndexPath,
-              let cell = cryptogramView.cell(at: indexPath),
-              let viewModel = item(at: indexPath)
-          else { return }
-
-          if viewModel.isCorrectValue(character) {
-              viewModel.setValue(character, cell: cell, in: cryptogramView)
-
-              let remainingIndexPaths = selectionManager.indexPaths(where: { item in
-                  item.isAssociated(with: viewModel)
-              })
-
-              for indexPath in remainingIndexPaths {
-                  guard let viewModel = item(at: indexPath) else { continue }
-                  viewModel.fill()
-              }
-
-              cryptogramView.reloadCells(at: remainingIndexPaths)
-
-              delegate?.cryptogramViewManager(self, didModifyItemAt: indexPath, in: cryptogramView)
-
-              deselectHighlightedCells(in: cryptogramView)
-              selectNextCell(in: cryptogramView)
-
-              if isCompleted() {
-                  delegate?.cryptogramViewManager(self, didComplete: cryptogramView)
-                  deselectCell(in: cryptogramView)
-              }
-          }
-          else {
-              delegate?.cryptogramViewManager(self, didInputWrongAnswerAt: indexPath, in: cryptogramView)
-          }*/
-     }*/
-
-    /* // MARK: - Cryptogram Manager Delegate
-
-     public func cryptogramViewManager(_ manager: CryptogramViewManager, didModifyItemAt indexPath: CryptogramIndexPath, in cryptogramView: CryptogramView) {
-         guard let value = manager.item(at: indexPath)?.value else { return }
-         correctAnswerInputted(at: indexPath, value: value)
-     }
-
-     public func cryptogramViewManager(_ manager: CryptogramViewManager, didSelectItemAt indexPath: CryptogramIndexPath, in cryptogramView: CryptogramView) {
-         print("Did select item at \(indexPath)")
-     }
-
-     public func cryptogramViewManager(_ manager: CryptogramViewManager, didInputWrongAnswerAt indexPath: CryptogramIndexPath, in cryptogramView: CryptogramView) {
-         wrongAnswerInputted()
-     }
-
-     public func cryptogramViewManager(_ manager: CryptogramViewManager, didComplete cryptogramView: CryptogramView) {
-         didCompleteGame()
-     }*/
 }

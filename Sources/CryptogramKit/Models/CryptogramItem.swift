@@ -5,16 +5,18 @@ open class CryptogramItem: ObservableObject {
     public var value: String
     public var correctValue: String
     public var code: String
+    public var codeHidden: Bool
     public var selectable: Bool
     public var inputtedAt: Date?
     public var type: CryptogramItemType
     public var caseSensitive: Bool = false
 
-    public init(id: String, value: String, correctValue: String, code: String, selectable: Bool, inputtedAt: Date?, type: CryptogramItemType) {
+    public init(id: String, value: String, correctValue: String, code: String, codeHidden: Bool, selectable: Bool, inputtedAt: Date?, type: CryptogramItemType) {
         self.id = id
         self.value = value
         self.correctValue = correctValue
         self.code = code
+        self.codeHidden = codeHidden
         self.selectable = selectable
         self.inputtedAt = inputtedAt
         self.type = type
@@ -26,6 +28,11 @@ open class CryptogramItem: ObservableObject {
             inputtedAt = Date()
         }
 
+        objectWillChange.send()
+    }
+
+    public func setCodeHidden(_ hidden: Bool) {
+        codeHidden = hidden
         objectWillChange.send()
     }
 

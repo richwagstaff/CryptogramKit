@@ -6,11 +6,10 @@ open class CryptogramAnimations {
     public enum Animation: String {
         case selection
         case deselection
+        case codeSolved
     }
 
-    init(
-        animationProvider: CryptogramAnimationProvider = DefaultCryptogramAnimationProvider()
-    ) {
+    init(animationProvider: CryptogramAnimationProvider = DefaultCryptogramAnimationProvider()) {
         self.animationProvider = animationProvider
     }
 
@@ -19,7 +18,8 @@ open class CryptogramAnimations {
         after delay: TimeInterval = 0,
         bringViewToFront: Bool = true
     ) {
-        let animation = animationProvider.createSelectionAnimation(delay: delay)
+        let animation = animationProvider.createSelectionAnimation()
+        animation.beginTime = CACurrentMediaTime() + delay
         addAnimation(animation, to: view, forKey: Animation.selection.rawValue, bringViewToFront: bringViewToFront)
     }
 
@@ -28,8 +28,31 @@ open class CryptogramAnimations {
         after delay: TimeInterval = 0,
         bringViewToFront: Bool = true
     ) {
-        let animation = animationProvider.createDeselectionAnimation(delay: delay)
+        let animation = animationProvider.createDeselectionAnimation()
+        animation.beginTime = CACurrentMediaTime() + delay
         addAnimation(animation, to: view, forKey: Animation.deselection.rawValue, bringViewToFront: bringViewToFront)
+    }
+
+    public func animateCodeSolved(
+        _ view: UIView,
+        after delay: TimeInterval = 0,
+        bringViewToFront: Bool = true
+    ) {
+        let animation = animationProvider.createCodeSolvedAnimation()
+        animation.beginTime = CACurrentMediaTime() + delay
+        addAnimation(animation, to: view, forKey: Animation.codeSolved.rawValue, bringViewToFront: bringViewToFront)
+    }
+
+    public func animateCodeSolved(
+        _ views: [UIView],
+        after delay: TimeInterval = 0,
+        staggered: Bool = false,
+        bringViewsToFront: Bool = true
+    ) {
+        for (i, view) in views.enumerated() {
+            let offset = staggered ? TimeInterval(i) * delay : 0
+            animateCodeSolved(view, after: offset, bringViewToFront: bringViewsToFront)
+        }
     }
 
     public func addAnimation(

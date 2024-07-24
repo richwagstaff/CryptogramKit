@@ -29,6 +29,8 @@ open class CryptogramViewCellModel: CryptogramViewCellViewModelProtocol, Chunkab
         cell.codeLabel.textColor = styles.codeColor
         cell.codeLabel.font = styles.codeFont
 
+        cell.codeLabel.isHidden = item.codeHidden
+
         cell.separator.backgroundColor = styles.separatorColor
         cell.contentView.backgroundColor = styles.backgroundColor
         cell.contentView.layer.cornerRadius = styles.cornerRadius
@@ -59,11 +61,5 @@ open class CryptogramViewCellModel: CryptogramViewCellViewModelProtocol, Chunkab
 
     public func isCorrectValue(_ value: String) -> Bool {
         item.correctValue == value
-    }
-
-    public func setValue(_ value: String, cell: CryptogramViewCell, in cryptogramView: CryptogramView) {
-        item.value = value
-        item.inputtedAt = Date()
-        cell.letterLabel.text = value
     }
 }

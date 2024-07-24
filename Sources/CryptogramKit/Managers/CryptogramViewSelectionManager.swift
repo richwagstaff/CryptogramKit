@@ -1,7 +1,7 @@
 import Foundation
 
 open class CryptogramViewSelectionManager: CryptogramRowHandling {
-    public var animations = CryptogramAnimations()
+    public var highlightingEnabled: Bool = false
     public weak var dataSource: CryptogramViewSelectionHandlerDataSource?
     public weak var delegate: CryptogramViewSelectionHandlerDelegate?
 
@@ -42,12 +42,12 @@ open class CryptogramViewSelectionManager: CryptogramRowHandling {
         configure(cell: cell, state: .selected, at: indexPath)
 
         if animated {
-            animations.animateCellSelection(cell)
+            cryptogramView.animations.animateCellSelection(cell)
         }
     }
 
     open func highlightCell(at indexPath: CryptogramIndexPath, in cryptogramView: CryptogramView) {
-        guard let cell = cryptogramView.cell(at: indexPath) else { return }
+        guard highlightingEnabled, let cell = cryptogramView.cell(at: indexPath) else { return }
         configure(cell: cell, state: .highlighted, at: indexPath)
 
         cryptogramView.highlightedIndexPaths.append(indexPath)
