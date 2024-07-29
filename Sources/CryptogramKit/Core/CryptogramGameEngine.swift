@@ -91,12 +91,12 @@ open class CryptogramGameEngine: ObservableObject {
 
     open func didCompleteGame() {
         stop()
-        delegate?.gameDidFinish(engine: self, success: true)
+        delegate?.gameDidFinish(engine: self)
     }
 
     open func didFailGame() {
         stop()
-        delegate?.gameDidFinish(engine: self, success: false)
+        delegate?.gameDidFinish(engine: self)
     }
 
     func setValue(_ value: String, forItemAt index: Int, updateInputtedAt: Bool) {
@@ -136,7 +136,7 @@ open class CryptogramGameEngine: ObservableObject {
     open func updateSolvedCodes() {
         let previousSolvedCodes = solvedCodes
 
-        solvedCodes = items.solvedCodes()
+        solvedCodes = items.codes(forState: .fullySolved)
 
         if hideCodesWhenSolved {
             for item in items {

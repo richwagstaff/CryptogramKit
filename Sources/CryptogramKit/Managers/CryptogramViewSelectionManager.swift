@@ -44,6 +44,8 @@ open class CryptogramViewSelectionManager: CryptogramRowHandling {
         if animated {
             cryptogramView.animations.animateCellSelection(cell)
         }
+
+        delegate?.didSelectCell(at: indexPath, in: cryptogramView)
     }
 
     open func highlightCell(at indexPath: CryptogramIndexPath, in cryptogramView: CryptogramView) {

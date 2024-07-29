@@ -65,7 +65,9 @@ open class CryptogramViewManager: CryptogramViewDataSource, CryptogramViewDelega
 
     public func cryptogramView(_ cryptogramView: CryptogramView, didDeselectCell cell: CryptogramViewCell, at indexPath: CryptogramIndexPath) {}
 
-    public func cryptogramView(_ cryptogramView: CryptogramView, didSelectCell cell: CryptogramViewCell, at indexPath: CryptogramIndexPath) {}
+    public func cryptogramView(_ cryptogramView: CryptogramView, didSelectCell cell: CryptogramViewCell, at indexPath: CryptogramIndexPath) {
+        delegate?.cryptogramViewManager(self, didSelectItemAt: indexPath, in: cryptogramView)
+    }
 
     open func configure(cell: CryptogramViewCell, state: CryptogramViewCellState, at indexPath: CryptogramIndexPath) {
         let viewModel = item(at: indexPath)
@@ -100,7 +102,9 @@ open class CryptogramViewManager: CryptogramViewDataSource, CryptogramViewDelega
 
     // MARK: - Selection Delegate
 
-    public func didSelectCell(at indexPath: CryptogramIndexPath) {}
+    public func didSelectCell(at indexPath: CryptogramIndexPath, in cryptogramView: CryptogramView) {
+        delegate?.cryptogramViewManager(self, didSelectItemAt: indexPath, in: cryptogramView)
+    }
 }
 
 public extension CryptogramViewManager {

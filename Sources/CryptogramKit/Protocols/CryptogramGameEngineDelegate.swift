@@ -2,7 +2,7 @@ import Foundation
 
 public protocol CryptogramGameEngineDelegate: AnyObject {
     func wrongAnswerInputted(engine: CryptogramGameEngine)
-    func gameDidFinish(engine: CryptogramGameEngine, success: Bool)
+    func gameDidFinish(engine: CryptogramGameEngine)
     func didInputAnswers(into items: [CryptogramItem], engine: CryptogramGameEngine)
     func didSolveCode(_ code: String, engine: CryptogramGameEngine)
 }

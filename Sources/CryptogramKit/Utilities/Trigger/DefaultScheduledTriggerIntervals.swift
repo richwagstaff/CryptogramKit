@@ -8,7 +8,7 @@ open class DefaultScheduledTriggerIntervals: ScheduledTriggerIntervalProtocol {
     }
 
     public func triggerIntervals() -> [TimeInterval] {
-        let delay: TimeInterval = 0.5
+        let delay: TimeInterval = 0.15
 
         return (0 ..< count).map { TimeInterval($0) * delay }
     }

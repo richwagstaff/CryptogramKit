@@ -5,7 +5,7 @@ import SnapKit
 import SwiftUI
 import UIKit
 
-open class CryptogramViewController: UIViewController, KeyboardControllerDelegate, CryptogramGameEngineDelegate {
+open class CryptogramViewController: UIViewController, KeyboardControllerDelegate, CryptogramGameEngineDelegate, CryptogramViewManagerDelegate, UIScrollViewDelegate {
     public var dataHandling: CryptogramDataHandling?
     public var styles = CryptogramViewControllerStyles()
 
@@ -44,12 +44,7 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
         loadGame()
         setupNavigationItem()
         view.backgroundColor = .systemBackground
-
-        /* showCompleted(true, animated: false)
-
-         if engine.isCompleted() {
-             showCompleted(true, animated: false)
-         } */
+        scrollView.delegate = self
     }
 
     override open func viewWillDisappear(_ animated: Bool) {
@@ -70,37 +65,40 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
 
         configureKeyboard()
 
-        scrollView.contentInset = UIEdgeInsets(top: 40, left: 0, bottom: 40, right: 0)
+        scrollView.contentInset = UIEdgeInsets(top: 60, left: 0, bottom: 60, right: 0)
+        scrollView.edgesForExtendedLayout = .top
     }
 
     func addSubviews() {
-        view.addSubview(keyboardView)
         view.addSubview(scrollView)
+        view.addSubview(keyboardView)
         scrollView.addSubview(cryptogramView)
         view.addSubview(citationLabel)
         addCompletedView()
+
         addDotsView()
     }
 
     func setupConstraints() {
         scrollView.snp.makeConstraints { make in
-            make.top.leading.trailing.equalTo(view.safeAreaLayoutGuide)
+            make.top.leading.trailing.equalTo(view)
             make.bottom.equalTo(keyboardView.snp.top)
         }
 
+        dotsView?.snp.makeConstraints { make in
+            make.centerX.equalToSuperview()
+            make.top.equalTo(view.safeAreaLayoutGuide).offset(8)
+        }
+
         cryptogramView.snp.makeConstraints { make in
-            make.top.leading.trailing.bottom.equalToSuperview()
+            make.top.leading.trailing.equalToSuperview()
+            make.bottom.equalToSuperview() // .offset(-500) //  offset for testing scrolling
             make.width.equalToSuperview()
         }
 
         keyboardView.snp.makeConstraints { make in
             make.leading.trailing.bottom.equalToSuperview()
             make.height.equalTo(250)
-        }
-
-        dotsView?.snp.makeConstraints { make in
-            make.centerX.equalToSuperview()
-            make.top.equalTo(view.safeAreaLayoutGuide).offset(20)
         }
 
         setCompletedView(hidden: true)
@@ -126,21 +124,31 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
     }
 
     func handleFirstLoadAdjustments() {
-        if isFirstLoad {
-            isFirstLoad = false
-            reloadKeyboard()
-            keyboardView.setNeedsLayout()
-        }
+        guard isFirstLoad else { return }
+        isFirstLoad = false
+        reloadKeyboard()
+        keyboardView.setNeedsLayout()
     }
 
     func addDotsView() {
-        let dotsHostingController = UIHostingController(rootView: Dots(model: dots))
+        let dotsHostingController = UIHostingController(
+            rootView: Dots(model: dots)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 10)
+        )
 
         addChild(dotsHostingController)
         view.addSubview(dotsHostingController.view)
         dotsHostingController.didMove(toParent: self)
 
         dotsView = dotsHostingController.view
+
+        dotsView?.backgroundColor = .systemBackground
+        dotsView?.layer.cornerRadius = 10
+        dotsView?.layer.shadowColor = UIColor.black.cgColor
+        dotsView?.layer.shadowRadius = 20
+        dotsView?.layer.shadowOffset = .zero
+        dotsView?.layer.shadowOpacity = 0.2
     }
 
     func configureObservers() {
@@ -174,6 +182,7 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
             maxColumnsPerRow: maxItemsPerRow
         )
         manager.configure(cryptogramView)
+        manager.delegate = self
 
         dots.filled = engine.livesRemaining
         dots.total = engine.maxLives
@@ -196,6 +205,7 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
         data?.time = engine.timeElapsed()
         data?.lives = engine.livesRemaining
         data?.completed = engine.isCompleted()
+        data?.failed = engine.state == .failed
 
         guard let data = data else { return }
         dataHandling?.saveCryptogramData(data: data)
@@ -230,7 +240,6 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
         hostingController.view.backgroundColor = .secondarySystemBackground
         hostingController.didMove(toParent: self)
 
-        // completedHostingController = hostingController
         self.completedView = hostingController.view
         self.completedView?.layer.shadowColor = UIColor.black.cgColor
         self.completedView?.layer.shadowOpacity = 0.2
@@ -285,18 +294,38 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
 
     // MARK: - Keyboard Management
 
+    func setKeyboardEnabled(_ enabled: Bool) {
+        keyboardView.isUserInteractionEnabled = enabled
+    }
+
     func reloadKeyboard() {
-        let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        setKeyboardEnabled(engine.isPlaying)
 
         keyboardController.reload(keyboardView: keyboardView)
         updateKeyboardHeightConstraint()
         view.setNeedsLayout()
 
+        updateKeyboardButtons()
+    }
+
+    func updateKeyboardButtons() {
+        let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
         setKeyboardButtonsEnabled(true, forKeys: alphabet.map { String($0) })
+        configureKeyboardKeys(alphabet.map { String($0) }) { key in
+            key.styles.textColor = .label
+            key.styles.font = UIFont.systemFont(ofSize: key.styles.font.pointSize)
+        }
 
         guard let selectedItem = selectedItem() else { return }
-        let solvedKeys = keyboardKeysToDisable(forItem: selectedItem)
+        let solvedKeys = charactersForState(.fullySolved, item: selectedItem)
         setKeyboardButtonsEnabled(false, forKeys: solvedKeys)
+
+        let partiallySolvedKeys = charactersForState(.partiallySolved, item: selectedItem)
+        configureKeyboardKeys(partiallySolvedKeys) { key in
+            key.styles.textColor = .systemGreen
+            key.styles.font = UIFont.boldSystemFont(ofSize: key.styles.font.pointSize)
+        }
     }
 
     func updateKeyboardHeightConstraint() {
@@ -306,9 +335,18 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
         }
     }
 
+    open func configureKeyboardKey(_ key: String, configure: @escaping (inout KeyboardKey) -> Void) {
+        guard let indexPath = keyboardController.firstIndexPath(whereCharacter: key) else { return }
+        keyboardController.configureKey(at: indexPath, keyboardView: keyboardView, configure: configure)
+    }
+
     open func setKeyboardButtonEnabled(_ enabled: Bool, forKey key: String) {
         guard let indexPath = keyboardController.firstIndexPath(whereCharacter: key) else { return }
         keyboardController.setButtonEnabled(enabled, at: indexPath, keyboardView: keyboardView)
+    }
+
+    open func configureKeyboardKeys(_ keys: [String], configure: @escaping (inout KeyboardKey) -> Void) {
+        keys.forEach { configureKeyboardKey($0, configure: configure) }
     }
 
     open func setKeyboardButtonsEnabled(_ enabled: Bool, forKeys keys: [String]) {
@@ -339,11 +377,11 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
 
     // MARK: - CryptogramGameEngineDelegate
 
-    public func gameDidFinish(engine: CryptogramGameEngine, success: Bool) {
+    public func gameDidFinish(engine: CryptogramGameEngine) {
         saveData()
 
-        if !success {
-            // TODO: Remove stagger logic from engine, it should be somewhere else
+        if engine.state.hasFailed {
+            selectFirstIncorrectCell()
             engine.revealAllRemainingItems(staggered: true) {
                 self.showCompleted(true, animated: true)
             }
@@ -351,6 +389,15 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
         else {
             showCompleted(true, animated: true)
         }
+    }
+
+    public func selectFirstIncorrectCell() {
+        guard
+            let id = engine.items.first(where: { !$0.isCorrect })?.id,
+            let indexPath = manager.firstIndexPath(whereId: id)
+        else { return }
+
+        cryptogramView.selectCell(at: indexPath, animated: true)
     }
 
     public func didInputAnswers(into items: [CryptogramItem], engine: CryptogramGameEngine) {
@@ -395,7 +442,8 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
             make.top.equalTo(dotsView?.snp.bottom ?? view.safeAreaLayoutGuide).offset(20)
         }
 
-        notice.notify(text)
+        noticeHostingController.view.backgroundColor = .clear
+        notice.notify(text, hideAfter: delay)
         noticeView = noticeHostingController.view
     }
 
@@ -420,8 +468,31 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
         return engine.items.first(where: { $0.id == selectedViewItem.id })
     }
 
-    open func keyboardKeysToDisable(forItem item: CryptogramItem) -> [String] {
-        return engine.items.solvedCharacters(cipherMap: data?.cipherMap ?? [:])
+    open func charactersForState(_ state: CryptogramCodeSolutionState, item: CryptogramItem) -> [String] {
+        engine.items.characters(state: state, cipherMap: data?.cipherMap ?? [:])
+    }
+
+    // MARK: - Cryptogram View Manager Delegate
+
+    public func cryptogramViewManager(_ manager: CryptogramViewManager, didModifyItemAt indexPath: CryptogramIndexPath, in cryptogramView: CryptogramView) {}
+
+    public func cryptogramViewManager(_ manager: CryptogramViewManager, didSelectItemAt indexPath: CryptogramIndexPath, in cryptogramView: CryptogramView) {
+        updateKeyboardButtons()
+    }
+
+    public func cryptogramViewManager(_ manager: CryptogramViewManager, didInputWrongAnswerAt indexPath: CryptogramIndexPath, in cryptogramView: CryptogramView) {}
+
+    // MARK: - Scroll View Delegate
+
+    public func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        let highlightDots = scrollView.contentOffset.y > 0.5 - view.safeAreaInsets.top - scrollView.contentInset.top
+        emphasizeDotsView(highlightDots)
+    }
+
+    // MARK: - Shadow
+
+    open func emphasizeDotsView(_ emphasize: Bool) {
+        dotsView?.layer.shadowOpacity = emphasize ? 0.15 : 0
     }
 }
 
