@@ -47,9 +47,25 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
         scrollView.delegate = self
     }
 
+    override open func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        // How are we going to handle locked?????
+        if data?.locked == false {
+            engine.start()
+        }
+        else {
+            didAttemptToStartLockedCryptogram()
+        }
+    }
+
     override open func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         saveData()
+    }
+
+    override open func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        engine.pause()
     }
 
     override open func viewDidLayoutSubviews() {
@@ -192,7 +208,6 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
         cryptogramView.reloadData()
 
         cryptogramView.selectFirstCell(animated: true)
-        engine.start()
 
         if engine.state == .completed || engine.state == .failed {
             showCompleted(true, animated: false)
@@ -291,6 +306,8 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
         let hostingController = UIHostingController(rootView: instructions)
         present(hostingController, animated: true)
     }
+
+    open func didAttemptToStartLockedCryptogram() {}
 
     // MARK: - Keyboard Management
 

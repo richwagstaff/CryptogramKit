@@ -13,8 +13,9 @@ open class CryptogramData {
     public var cipherMap: [String: String]
     public var completed: Bool
     public var failed: Bool
+    public var locked: Bool
 
-    public init(id: String, title: String, phrase: String, author: String, source: String? = nil, time: TimeInterval, lives: Int, maxLives: Int, items: [CryptogramItem], cipherMap: [String: String], completed: Bool, failed: Bool) {
+    public init(id: String, title: String, phrase: String, author: String, source: String? = nil, time: TimeInterval, lives: Int, maxLives: Int, items: [CryptogramItem], cipherMap: [String: String], completed: Bool, failed: Bool, locked: Bool) {
         self.id = id
         self.title = title
         self.phrase = phrase
@@ -27,6 +28,7 @@ open class CryptogramData {
         self.cipherMap = cipherMap
         self.completed = completed
         self.failed = failed
+        self.locked = locked
     }
 
     static func sample() -> CryptogramData {
@@ -44,7 +46,8 @@ open class CryptogramData {
             items: ItemGenerator().items(for: phrase.uppercased(), solved: [], cipherMap: cipherMap),
             cipherMap: cipherMap,
             completed: false,
-            failed: false
+            failed: false,
+            locked: false
         )
     }
 
