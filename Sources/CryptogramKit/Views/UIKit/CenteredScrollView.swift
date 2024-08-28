@@ -26,7 +26,9 @@ open class CenteredScrollView: UIScrollView {
     }
 
     private func updateTopContentInsetIfNeeded() {
-        if contentSize.height < bounds.size.height {
+        let availableHeight = bounds.size.height - originalContentInset.top - originalContentInset.bottom - safeAreaInsets.top - safeAreaInsets.bottom
+
+        if contentSize.height < availableHeight {
             modifyingOriginalContentInset = true
 
             var extendedLayoutOffset: CGFloat = 0

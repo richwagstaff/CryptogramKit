@@ -37,7 +37,7 @@ open class ItemGenerator {
                     value: solved.contains(letter) ? letter : "",
                     correctValue: letter,
                     code: code ?? "",
-                    codeHidden: true,
+                    codeHidden: false,
                     selectable: true,
                     inputtedAt: nil,
                     type: .letter

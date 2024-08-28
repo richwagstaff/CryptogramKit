@@ -9,6 +9,7 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
     public var dataHandling: CryptogramDataHandling?
     public var styles = CryptogramViewControllerStyles()
 
+    public lazy var keyboardSeparatorView = UIView()
     public lazy var keyboardView = KeyboardView()
     public lazy var scrollView = CenteredScrollView()
     public lazy var cryptogramView = CryptogramView()
@@ -52,6 +53,7 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
         // How are we going to handle locked?????
         if data?.locked == false {
             engine.start()
+            reloadKeyboard()
         }
         else {
             didAttemptToStartLockedCryptogram()
@@ -82,13 +84,13 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
         configureKeyboard()
 
         scrollView.contentInset = UIEdgeInsets(top: 60, left: 0, bottom: 60, right: 0)
-        scrollView.edgesForExtendedLayout = .top
     }
 
     func addSubviews() {
         view.addSubview(scrollView)
-        view.addSubview(keyboardView)
         scrollView.addSubview(cryptogramView)
+        view.addSubview(keyboardView)
+        keyboardView.addSubview(keyboardSeparatorView)
         view.addSubview(citationLabel)
         addCompletedView()
 
@@ -117,6 +119,11 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
             make.height.equalTo(250)
         }
 
+        keyboardSeparatorView.snp.makeConstraints { make in
+            make.leading.trailing.top.equalToSuperview()
+            make.height.equalTo(0.5)
+        }
+
         setCompletedView(hidden: true)
         setCitation(hidden: true)
     }
@@ -129,6 +136,8 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
     func configureKeyboard() {
         keyboardController.configure(keyboardView)
         keyboardController.delegate = self
+
+        keyboardSeparatorView.backgroundColor = .separator
     }
 
     open func createCitationLabel() -> UILabel {
