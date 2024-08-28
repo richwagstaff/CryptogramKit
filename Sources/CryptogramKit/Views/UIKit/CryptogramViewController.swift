@@ -340,6 +340,7 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
         setKeyboardButtonsEnabled(true, forKeys: alphabet.map { String($0) })
         configureKeyboardKeys(alphabet.map { String($0) }) { key in
             key.styles.textColor = .label
+            key.styles.hoverViewTextColor = .label
             key.styles.font = UIFont.systemFont(ofSize: key.styles.font.pointSize)
         }
 
@@ -350,6 +351,7 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
         let partiallySolvedKeys = charactersForState(.partiallySolved, item: selectedItem)
         configureKeyboardKeys(partiallySolvedKeys) { key in
             key.styles.textColor = .systemGreen
+            key.styles.hoverViewTextColor = .systemGreen
             key.styles.font = UIFont.boldSystemFont(ofSize: key.styles.font.pointSize)
         }
     }
