@@ -405,7 +405,7 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
 
     // MARK: - CryptogramGameEngineDelegate
 
-    public func gameDidFinish(engine: CryptogramGameEngine) {
+    open func gameDidFinish(engine: CryptogramGameEngine) {
         saveData()
 
         if engine.state.hasFailed {
