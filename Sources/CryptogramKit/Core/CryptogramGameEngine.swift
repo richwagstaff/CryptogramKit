@@ -89,6 +89,10 @@ open class CryptogramGameEngine: ObservableObject {
         }
     }
 
+    open func didBeginGame() {
+        delegate?.gameDidBegin(engine: self)
+    }
+
     open func didCompleteGame() {
         stop()
         delegate?.gameDidFinish(engine: self)
@@ -170,12 +174,12 @@ open class CryptogramGameEngine: ObservableObject {
     }
 
     public func start() {
-        if state.isFinished {
-            return
-        }
+        guard !isPlaying && !state.isFinished else { return }
 
         startedAt = Date()
         isPlaying = true
+
+        didBeginGame()
     }
 
     public func stop() {

@@ -405,6 +405,11 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
 
     // MARK: - CryptogramGameEngineDelegate
 
+    public func gameDidBegin(engine: CryptogramGameEngine) {
+        guard let data = data else { return }
+        dataHandling?.cryptogramDidStartPlaying(data: data)
+    }
+
     open func gameDidFinish(engine: CryptogramGameEngine) {
         saveData()
 
