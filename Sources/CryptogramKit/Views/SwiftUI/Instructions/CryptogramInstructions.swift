@@ -40,7 +40,7 @@ extension Card {
             text: [
                 "Cryptograms are short pieces of text that have been converted into numbers.",
                 "For example, the number 1 might represent ‘T’, and 2 might stand for ‘Y’.",
-                "The challenge is to decode the numbers back into letters to reveal the phrase."
+                "The challenge is to decode the numbers back into letters to reveal the secret message."
             ]
         )
     }
@@ -50,17 +50,22 @@ extension Card {
             image: Image(systemName: "heart.fill"),
             title: "Lives",
             text: [
-                "You have four lives to complete the cryptogram.",
+                "You can make up to 4 mistakes when solving the cryptogram.",
                 "Each incorrect guess will lose you a life.",
-                "Should you lose all of your lives, the game will end and we'll graciously reveal the answer."
+                "Should you lose all of your lives, the game will end and we'll reveal the answer."
             ]
         )
     }
 
     static func digitsReferToLetters() -> CryptogramFeatureCard {
         CryptogramFeatureCard(
-            title: "Digits Refer To Letters",
-            text: ["Each digit in the cryptogram refers to a letter.", "For example, in the cryptogram above E is 14 and U is 21."],
+            title: "Decoding Numbers to Letters",
+            text: [
+                "Each number in the cryptogram refers to a letter.",
+                "For example, in the cryptogram above, 14 represents \"E\" and 21 represents \"U\".",
+                "A number always represents the same letter throughout the cryptogram."
+
+            ],
             cryptogramManager: CryptogramViewManager(
                 phrase: "Love is all you need", revealed: ["L", "O", "V", "A", "I", "N", "S", "Y", "D"], cipherMap: Cipher.cipherMap1
             )
@@ -69,8 +74,13 @@ extension Card {
 
     static func useLogic() -> CryptogramFeatureCard {
         CryptogramFeatureCard(
-            title: "Use Logic",
-            text: ["Use logic to determine which letters correspond to which digits.", "For example, single letter words are likely to be A or I."],
+            title: "Patterns To Look For",
+            text: [
+                "When you see a one-letter word, it's almost always going to be an A or an I.",
+                "A word with an apostrophe could be one that ends in 's or something like DON'T, CAN'T, WE'D, YOU'VE, WE'LL, THEY'RE, IT'S, etc.",
+                "Some of the most common three-letter words include AND, ARE, BUT, CAN, FOR, HAS, HER, HIS, HOW, NOT, ONE, OUR, THE, USE, WAS, WHO, and YOU.",
+                "And finally, some of common word endings include -ED, -ING, -LY."
+            ],
             cryptogramManager: CryptogramViewManager(
                 phrase: "I think, therefore, I am", revealed: ["C", "H", "R", "E", "N", "T", "O", "C", "K", "A", "M", "F"], cipherMap: Cipher.cipherMap2
             )
@@ -81,7 +91,7 @@ extension Card {
         Card(
             title: "Good Luck!",
             text: [
-                "Go forth, code breaker, and crack the secret message!"
+                "So go forth, brave code breaker, and crack the secret message!"
             ]
         )
     }
