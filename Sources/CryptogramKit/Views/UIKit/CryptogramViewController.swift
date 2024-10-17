@@ -344,11 +344,10 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
             key.styles.font = UIFont.systemFont(ofSize: key.styles.font.pointSize)
         }
 
-        guard let selectedItem = selectedItem() else { return }
-        let solvedKeys = charactersForState(.fullySolved, item: selectedItem)
+        let solvedKeys = charactersForState(.fullySolved)
         setKeyboardButtonsEnabled(false, forKeys: solvedKeys)
 
-        let partiallySolvedKeys = charactersForState(.partiallySolved, item: selectedItem)
+        let partiallySolvedKeys = charactersForState(.partiallySolved)
         configureKeyboardKeys(partiallySolvedKeys) { key in
             key.styles.textColor = .systemGreen
             key.styles.hoverViewTextColor = .systemGreen
@@ -383,7 +382,7 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
 
     // MARK: - KeyboardControllerDelegate
 
-    public func didSelectKeyboardKey(_ key: KeyboardKey, button: KeyboardButton, controller: KeyboardController) {
+    open func didSelectKeyboardKey(_ key: KeyboardKey, button: KeyboardButton, controller: KeyboardController) {
         guard let keyType = key.cryptogramKeyType else { return }
 
         switch keyType {
@@ -405,7 +404,7 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
 
     // MARK: - CryptogramGameEngineDelegate
 
-    public func gameDidBegin(engine: CryptogramGameEngine) {
+    open func gameDidBegin(engine: CryptogramGameEngine) {
         guard let data = data else { return }
         dataHandling?.cryptogramDidStartPlaying(data: data)
     }
@@ -501,23 +500,23 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
         return engine.items.first(where: { $0.id == selectedViewItem.id })
     }
 
-    open func charactersForState(_ state: CryptogramCodeSolutionState, item: CryptogramItem) -> [String] {
+    open func charactersForState(_ state: CryptogramCodeSolutionState) -> [String] {
         engine.items.characters(state: state, cipherMap: data?.cipherMap ?? [:])
     }
 
     // MARK: - Cryptogram View Manager Delegate
 
-    public func cryptogramViewManager(_ manager: CryptogramViewManager, didModifyItemAt indexPath: CryptogramIndexPath, in cryptogramView: CryptogramView) {}
+    open func cryptogramViewManager(_ manager: CryptogramViewManager, didModifyItemAt indexPath: CryptogramIndexPath, in cryptogramView: CryptogramView) {}
 
-    public func cryptogramViewManager(_ manager: CryptogramViewManager, didSelectItemAt indexPath: CryptogramIndexPath, in cryptogramView: CryptogramView) {
+    open func cryptogramViewManager(_ manager: CryptogramViewManager, didSelectItemAt indexPath: CryptogramIndexPath, in cryptogramView: CryptogramView) {
         updateKeyboardButtons()
     }
 
-    public func cryptogramViewManager(_ manager: CryptogramViewManager, didInputWrongAnswerAt indexPath: CryptogramIndexPath, in cryptogramView: CryptogramView) {}
+    open func cryptogramViewManager(_ manager: CryptogramViewManager, didInputWrongAnswerAt indexPath: CryptogramIndexPath, in cryptogramView: CryptogramView) {}
 
     // MARK: - Scroll View Delegate
 
-    public func scrollViewDidScroll(_ scrollView: UIScrollView) {
+    open func scrollViewDidScroll(_ scrollView: UIScrollView) {
         let highlightDots = scrollView.contentOffset.y > 0.5 - view.safeAreaInsets.top - scrollView.contentInset.top
         emphasizeDotsView(highlightDots)
     }

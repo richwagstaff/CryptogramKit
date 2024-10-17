@@ -77,7 +77,7 @@ open class CryptogramView: UIView, ObservableObject {
         }
     }
 
-    func cell(at indexPath: CryptogramIndexPath) -> CryptogramViewCell? {
+    open func cell(at indexPath: CryptogramIndexPath) -> CryptogramViewCell? {
         guard indexPath.row < rows.count else { return nil }
         let row = rows[indexPath.row]
 
@@ -85,7 +85,7 @@ open class CryptogramView: UIView, ObservableObject {
         return row.cells[indexPath.column]
     }
 
-    func cells(at indexPaths: [CryptogramIndexPath]) -> [CryptogramViewCell] {
+    open func cells(at indexPaths: [CryptogramIndexPath]) -> [CryptogramViewCell] {
         indexPaths.compactMap { cell(at: $0) }
     }
 
