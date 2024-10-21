@@ -1,33 +1,36 @@
 import Foundation
 
-open class TargetChunker<ChunkElement: Chunkable> {
-    public typealias Element = ChunkElement
+open class Wrapper<Element: BreakableElement> {
     public init() {}
 
-    public func chunk(items: [ChunkElement], maxChunkSize: Int, deleteLastElementInChunkIfBreakPoint: Bool) -> [[ChunkElement]] {
-        var rows: [[ChunkElement]] = []
+    public func wrap(items: [Element], maxLength: Int, removeBreakPointsAtStartAndEndOfLines: Bool) -> [[Element]] {
+        var rows: [[Element]] = []
 
-        var row: [ChunkElement] = []
+        var row: [Element] = []
         var columnCount = 0
 
         for (i, item) in items.enumerated() {
+            if columnCount == 0 && item.isBreakable {
+                continue
+            }
+
             row.append(item)
             columnCount += 1
 
             var addRow = false
-            if item.isBreakPoint {
+            if item.isBreakable {
                 let nextWordLength = items.lengthOfSegment(at: i + 1)
-                if columnCount + nextWordLength >= maxChunkSize {
+                if columnCount + nextWordLength >= maxLength {
                     addRow = true
                 }
             }
 
-            if columnCount >= maxChunkSize {
+            if columnCount >= maxLength {
                 addRow = true
             }
 
             if addRow {
-                if deleteLastElementInChunkIfBreakPoint && row.last?.isBreakPoint == true {
+                if removeBreakPointsAtStartAndEndOfLines && row.last?.isBreakable == true {
                     row.removeLast()
                 }
 

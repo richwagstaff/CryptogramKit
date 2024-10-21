@@ -1,7 +1,7 @@
 import UIKit
 
-open class CryptogramViewCellModel: CryptogramViewCellViewModelProtocol, Chunkable {
-    public var isBreakPoint: Bool
+open class CryptogramViewCellModel: CryptogramViewCellViewModelProtocol, BreakableElement {
+    public var isBreakable: Bool
     public var isSelectable: Bool
     public var id: String { item.id }
     public var value: String { item.value }
@@ -14,7 +14,7 @@ open class CryptogramViewCellModel: CryptogramViewCellViewModelProtocol, Chunkab
 
     public init(item: CryptogramItem) {
         self.item = item
-        self.isBreakPoint = item.type == .space
+        self.isBreakable = item.type == .space
         self.isSelectable = item.selectable
     }
 

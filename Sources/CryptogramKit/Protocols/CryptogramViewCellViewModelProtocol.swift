@@ -1,10 +1,10 @@
 import Foundation
 
-public protocol CryptogramViewCellViewModelProtocol: Chunkable {
+public protocol CryptogramViewCellViewModelProtocol: BreakableElement {
     // Properties
     var id: String { get }
     var value: String { get }
-    var isBreakPoint: Bool { get }
+    var isBreakable: Bool { get }
     var isSelectable: Bool { get }
 
     // Configuration

@@ -116,7 +116,7 @@ public extension CryptogramViewManager {
     }
 
     convenience init(items: [CryptogramViewCellModel], maxColumnsPerRow: Int) {
-        let rows = items.chunk(targetChunkSize: maxColumnsPerRow)
+        let rows = items.wrap(maxLength: maxColumnsPerRow)
         self.init(rows: rows)
     }
 
