@@ -108,20 +108,20 @@ open class CryptogramViewManager: CryptogramViewDataSource, CryptogramViewDelega
 }
 
 public extension CryptogramViewManager {
-    convenience init(phrase: String, revealed: [String], maxColumnsPerRow: Int = 15, uppercase: Bool = true, cipherMap: [String: String]) {
+    convenience init(phrase: String, revealed: [String], maxLineLength: Int = 15, uppercase: Bool = true, cipherMap: [String: String], lineBreakElement: CryptogramViewCellModel) {
         let generator = ItemGenerator()
         let items = generator.items(for: uppercase ? phrase.uppercased() : phrase, solved: revealed, cipherMap: cipherMap)
 
-        self.init(items: items, maxColumnsPerRow: maxColumnsPerRow)
+        self.init(items: items, maxLineLength: maxLineLength, lineBreakElement: lineBreakElement)
     }
 
-    convenience init(items: [CryptogramViewCellModel], maxColumnsPerRow: Int) {
-        let rows = items.wrap(maxLength: maxColumnsPerRow)
+    convenience init(items: [CryptogramViewCellModel], maxLineLength: Int, lineBreakElement: CryptogramViewCellModel) {
+        let rows = items.wrapped(maxLineLength: maxLineLength, lineBreakElement: lineBreakElement)
         self.init(rows: rows)
     }
 
-    convenience init(items: [CryptogramItem], maxColumnsPerRow: Int) {
+    convenience init(items: [CryptogramItem], maxLineLength: Int, lineBreakElement: CryptogramViewCellModel) {
         let viewModels = CellViewModelGenerator().viewModels(for: items)
-        self.init(items: viewModels, maxColumnsPerRow: maxColumnsPerRow)
+        self.init(items: viewModels, maxLineLength: maxLineLength, lineBreakElement: lineBreakElement)
     }
 }

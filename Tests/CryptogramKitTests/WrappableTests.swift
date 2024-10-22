@@ -1,17 +1,27 @@
 @testable import CryptogramKit
 import XCTest
 
+extension Character: SeparatorElement {
+    public var isSeparator: Bool {
+        return self == " " || self == "-"
+    }
+
+    public var isTrimmable: Bool {
+        return self == " "
+    }
+}
+
+extension String {
+    func wrap(maxLineLength: Int) -> [[Character]] {
+        Array(self).wrapped(maxLineLength: maxLineLength, lineBreakElement: "-")
+    }
+}
+
 final class WrappableTests: XCTestCase {
     // MARK: - Wrap Tests
 
     func testWrapShortTextWithMaxLength14() throws {
-        let items = CellViewModelGenerator().viewModels(
-            for: "I have always depended on the kindness of strangers",
-            solved: [],
-            cipherMap: Cipher.generateNumberCipherMap()
-        )
-
-        let wrappedItems = items.wrap(maxLength: 14)
+        let wrappedItems = "I have always depended on the kindness of strangers".wrap(maxLineLength: 14)
 
         XCTAssertEqual(wrappedItems.count, 4)
         XCTAssertEqual(wrappedItems[0].count, 13)
@@ -19,114 +29,73 @@ final class WrappableTests: XCTestCase {
     }
 
     func testWrapLongTextWithMaxLength15() throws {
-        let items = CellViewModelGenerator().viewModels(
-            for: "There has never been a sadness that can't be cured by breakfast food",
-            solved: [],
-            cipherMap: Cipher.generateNumberCipherMap()
-        )
+        let wrappedItems = "There has never been a sadness that can't be cured by breakfast food".wrap(maxLineLength: 15)
 
-        let wrappedItems = items.wrap(maxLength: 15)
-
-        XCTAssertEqual(wrappedItems.count, 6)
-        XCTAssertEqual(wrappedItems[5].count, 4)
+        XCTAssertEqual(wrappedItems.count, 5)
+        XCTAssertEqual(wrappedItems[4].count, 14)
     }
 
     func testWrapEmptyInput() throws {
-        let items = CellViewModelGenerator().viewModels(
-            for: "",
-            solved: [],
-            cipherMap: Cipher.generateNumberCipherMap()
-        )
-
-        let wrappedItems = items.wrap(maxLength: 10)
+        let wrappedItems = "".wrap(maxLineLength: 10)
         XCTAssertEqual(wrappedItems.count, 0)
     }
 
-    /*
-     func testWrapSingleLongWord() throws {
-         let items = CellViewModelGenerator().viewModels(
-             for: "Supercalifragilisticexpialidocious",
-             solved: [],
-             cipherMap: Cipher.generateNumberCipherMap()
-         )
-
-         let wrappedItems = items.wrap(maxLength: 10)
-         XCTAssertEqual(wrappedItems.count, 1)
-         XCTAssertEqual(wrappedItems[0].count, items.count)
-     }*/
+    func testWrapSingleLongWord() throws {
+        let wrappedItems = "Supercalifragilisticexpialidocious".wrap(maxLineLength: 10)
+        XCTAssertEqual(wrappedItems.count, 4)
+        XCTAssertEqual(wrappedItems[0].count, 10)
+        XCTAssertEqual(wrappedItems[3].count, 7)
+    }
 
     func testWrapMaxLengthGreaterThanInputLength() throws {
-        let items = CellViewModelGenerator().viewModels(
-            for: "Short text",
-            solved: [],
-            cipherMap: Cipher.generateNumberCipherMap()
-        )
-
-        let wrappedItems = items.wrap(maxLength: 20)
+        let wrappedItems = "Short text".wrap(maxLineLength: 20)
         XCTAssertEqual(wrappedItems.count, 1)
-        XCTAssertEqual(wrappedItems[0].count, items.count)
+        XCTAssertEqual(wrappedItems[0].count, 10)
     }
 
     // MARK: - Segment Length Tests
 
     func testLengthOfSegmentsInShortText() throws {
-        let viewModels = CellViewModelGenerator().viewModels(
-            for: "I have always depended on the kindness of strangers",
-            solved: [],
-            cipherMap: Cipher.generateNumberCipherMap()
-        )
+        let items = Array("I have always depended on the kindness of strangers")
 
-        XCTAssertEqual(viewModels.lengthOfSegment(at: 0), 1)
-        XCTAssertEqual(viewModels.lengthOfSegment(at: 2), 4)
-        XCTAssertEqual(viewModels.lengthOfSegment(at: 10), 6)
+        XCTAssertEqual(items.lengthOfSegment(at: 0), 1)
+        XCTAssertEqual(items.lengthOfSegment(at: 2), 4)
+        XCTAssertEqual(items.lengthOfSegment(at: 10), 6)
     }
 
     func testLengthOfSegmentInLongText() throws {
-        let viewModels = CellViewModelGenerator().viewModels(
-            for: "There has never been a sadness that can't be cured by breakfast food",
-            solved: [],
-            cipherMap: Cipher.generateNumberCipherMap()
-        )
-
-        let length = viewModels.lengthOfSegment(at: 64)
+        let items = Array("There has never been a sadness that can't be cured by breakfast food")
+        let length = items.lengthOfSegment(at: 64)
         XCTAssertEqual(length, 4)
     }
 
     // MARK: - Segment Start Index Tests
 
     func testStartIndexOfSegmentInShortText() throws {
-        let items = CellViewModelGenerator().viewModels(
-            for: "I have always depended on the kindness of strangers",
-            solved: [],
-            cipherMap: Cipher.generateNumberCipherMap()
-        )
+        let items = Array("I have always depended on the kindness of strangers")
 
-        XCTAssertEqual(items.segmentStartIndex(forSegmentContainingIndex: 0), 0) // "I"
-        XCTAssertEqual(items.segmentStartIndex(forSegmentContainingIndex: 2), 2) // "have"
-        XCTAssertEqual(items.segmentStartIndex(forSegmentContainingIndex: 5), 2) // "have"
-        XCTAssertEqual(items.segmentStartIndex(forSegmentContainingIndex: 12), 7) // "depended"
-        XCTAssertEqual(items.segmentStartIndex(forSegmentContainingIndex: 43), 42) // "strangers"
-        XCTAssertEqual(items.segmentStartIndex(forSegmentContainingIndex: 50), 42) // "strangers"
-        XCTAssertEqual(items.segmentStartIndex(forSegmentContainingIndex: -1), nil) // out of bounds
-        XCTAssertEqual(items.segmentStartIndex(forSegmentContainingIndex: 51), nil) // out of bounds
+        XCTAssertEqual(items.startIndexOfSegment(containing: 0), 0) // "I"
+        XCTAssertEqual(items.startIndexOfSegment(containing: 2), 2) // "have"
+        XCTAssertEqual(items.startIndexOfSegment(containing: 5), 2) // "have"
+        XCTAssertEqual(items.startIndexOfSegment(containing: 12), 7) // "depended"
+        XCTAssertEqual(items.startIndexOfSegment(containing: 43), 42) // "strangers"
+        XCTAssertEqual(items.startIndexOfSegment(containing: 50), 42) // "strangers"
+        XCTAssertEqual(items.startIndexOfSegment(containing: -1), nil) // out of bounds
+        XCTAssertEqual(items.startIndexOfSegment(containing: 51), nil) // out of bounds
     }
 
     // MARK: - Segment End Index Tests
 
     func testEndIndexOfSegmentInShortText() throws {
-        let items = CellViewModelGenerator().viewModels(
-            for: "I have always depended on the kindness of strangers",
-            solved: [],
-            cipherMap: Cipher.generateNumberCipherMap()
-        )
+        let items = Array("I have always depended on the kindness of strangers")
 
-        XCTAssertEqual(items.segmentEndIndex(forSegmentContainingIndex: 0), 0) // "I"
-        XCTAssertEqual(items.segmentEndIndex(forSegmentContainingIndex: 2), 5) // "have"
-        XCTAssertEqual(items.segmentEndIndex(forSegmentContainingIndex: 5), 5) // "have"
-        XCTAssertEqual(items.segmentEndIndex(forSegmentContainingIndex: 12), 12) // "always"
-        XCTAssertEqual(items.segmentEndIndex(forSegmentContainingIndex: 43), 50) // "strangers"
-        XCTAssertEqual(items.segmentEndIndex(forSegmentContainingIndex: 50), 50) // "strangers"
-        XCTAssertEqual(items.segmentEndIndex(forSegmentContainingIndex: -1), nil) // out of bounds
-        XCTAssertEqual(items.segmentEndIndex(forSegmentContainingIndex: 51), nil) // out of bounds
+        XCTAssertEqual(items.endIndexOfSegment(containing: 0), 0) // "I"
+        XCTAssertEqual(items.endIndexOfSegment(containing: 2), 5) // "have"
+        XCTAssertEqual(items.endIndexOfSegment(containing: 5), 5) // "have"
+        XCTAssertEqual(items.endIndexOfSegment(containing: 12), 12) // "always"
+        XCTAssertEqual(items.endIndexOfSegment(containing: 43), 50) // "strangers"
+        XCTAssertEqual(items.endIndexOfSegment(containing: 50), 50) // "strangers"
+        XCTAssertEqual(items.endIndexOfSegment(containing: -1), nil) // out of bounds
+        XCTAssertEqual(items.endIndexOfSegment(containing: 51), nil) // out of bounds
     }
 }

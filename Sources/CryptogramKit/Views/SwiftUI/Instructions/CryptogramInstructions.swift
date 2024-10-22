@@ -67,7 +67,7 @@ extension Card {
 
             ],
             cryptogramManager: CryptogramViewManager(
-                phrase: "Love is all you need", revealed: ["L", "O", "V", "A", "I", "N", "S", "Y", "D"], cipherMap: Cipher.cipherMap1
+                phrase: "Love is all you need", revealed: ["L", "O", "V", "A", "I", "N", "S", "Y", "D"], cipherMap: Cipher.cipherMap1, lineBreakElement: LineBreakCryptogramCellViewModel()
             )
         )
     }
@@ -82,7 +82,7 @@ extension Card {
                 "And finally, some of common word endings include -ED, -ING, -LY."
             ],
             cryptogramManager: CryptogramViewManager(
-                phrase: "I think, therefore, I am", revealed: ["C", "H", "R", "E", "N", "T", "O", "C", "K", "A", "M", "F"], cipherMap: Cipher.cipherMap2
+                phrase: "I think, therefore, I am", revealed: ["C", "H", "R", "E", "N", "T", "O", "C", "K", "A", "M", "F"], cipherMap: Cipher.cipherMap2, lineBreakElement: LineBreakCryptogramCellViewModel()
             )
         )
     }

@@ -1,7 +1,8 @@
 import UIKit
 
-open class CryptogramViewCellModel: CryptogramViewCellViewModelProtocol, BreakableElement {
-    public var isBreakable: Bool
+open class CryptogramViewCellModel: CryptogramViewCellViewModelProtocol, SeparatorElement {
+    public var isSeparator: Bool
+    public var isTrimmable: Bool
     public var isSelectable: Bool
     public var id: String { item.id }
     public var value: String { item.value }
@@ -14,7 +15,8 @@ open class CryptogramViewCellModel: CryptogramViewCellViewModelProtocol, Breakab
 
     public init(item: CryptogramItem) {
         self.item = item
-        self.isBreakable = item.type == .space
+        self.isSeparator = item.type == .space
+        self.isTrimmable = item.type == .space
         self.isSelectable = item.selectable
     }
 

@@ -204,7 +204,8 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
 
         manager = CryptogramViewManager(
             items: cellViewModelGenerator.viewModels(for: engine.items),
-            maxColumnsPerRow: maxItemsPerRow
+            maxLineLength: maxItemsPerRow,
+            lineBreakElement: LineBreakCryptogramCellViewModel()
         )
         manager.configure(cryptogramView)
         manager.delegate = self

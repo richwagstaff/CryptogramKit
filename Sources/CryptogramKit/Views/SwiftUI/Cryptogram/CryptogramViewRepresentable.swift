@@ -40,7 +40,8 @@ struct CryptogramViewRepresentable: UIViewRepresentable {
             phrase: "Hello, World!",
             revealed: ["H", "E", "O"],
             uppercase: true,
-            cipherMap: Cipher.generateNumberCipherMap()
+            cipherMap: Cipher.generateNumberCipherMap(),
+            lineBreakElement: LineBreakCryptogramCellViewModel()
         )
     )
 }

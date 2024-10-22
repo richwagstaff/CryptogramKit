@@ -29,9 +29,10 @@ public struct CryptogramFeatureCard: View {
         title: "Digits Refer To Letters",
         text: ["a cryptogram blah blah", "And some more"],
         cryptogramManager: CryptogramViewManager(
-            phrase: "Love is all you need", 
+            phrase: "Love is all you need",
             revealed: ["A", "I"],
-            cipherMap: Cipher.generateNumberCipherMap()
+            cipherMap: Cipher.generateNumberCipherMap(),
+            lineBreakElement: LineBreakCryptogramCellViewModel()
         )
     ).padding()
 }

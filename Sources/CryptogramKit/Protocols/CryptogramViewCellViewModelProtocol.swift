@@ -1,10 +1,10 @@
 import Foundation
 
-public protocol CryptogramViewCellViewModelProtocol: BreakableElement {
+public protocol CryptogramViewCellViewModelProtocol: SeparatorElement {
     // Properties
     var id: String { get }
     var value: String { get }
-    var isBreakable: Bool { get }
+    var isSeparator: Bool { get }
     var isSelectable: Bool { get }
 
     // Configuration
