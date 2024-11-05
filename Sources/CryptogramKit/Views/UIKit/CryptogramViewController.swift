@@ -50,7 +50,7 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
 
     override open func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        // How are we going to handle locked?????
+
         if data?.locked == false {
             engine.start()
             reloadKeyboard()
@@ -179,6 +179,7 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
     func configureObservers() {
         engine.$livesRemaining
             .removeDuplicates()
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] newValue in
                 self?.dots.filled = newValue
                 self?.data?.lives = newValue
@@ -436,8 +437,10 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
     public func didInputAnswers(into items: [CryptogramItem], engine: CryptogramGameEngine) {
         let indexPaths = manager.indexPaths(whereIdIn: items.map { $0.id })
 
-        cryptogramView.reloadCells(at: indexPaths)
-        cryptogramView.selectNextCell(animated: true)
+        DispatchQueue.main.async {
+            self.cryptogramView.reloadCells(at: indexPaths)
+            self.cryptogramView.selectNextCell(animated: true)
+        }
     }
 
     public func wrongAnswerInputted(engine: CryptogramGameEngine) {
@@ -454,12 +457,14 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
         let itemIds = items.map { $0.id }
         let indexPaths = manager.indexPaths(whereIdIn: itemIds)
 
-        cryptogramView.reloadCells(at: indexPaths)
+        DispatchQueue.main.async {
+            self.cryptogramView.reloadCells(at: indexPaths)
 
-        let cells = cryptogramView.cells(at: indexPaths)
-        cryptogramView.animations.animateCodeSolved(cells)
+            let cells = self.cryptogramView.cells(at: indexPaths)
+            self.cryptogramView.animations.animateCodeSolved(cells)
 
-        reloadKeyboard()
+            self.reloadKeyboard()
+        }
     }
 
     public func notify(_ text: String, hidesAfter delay: TimeInterval = 5) {

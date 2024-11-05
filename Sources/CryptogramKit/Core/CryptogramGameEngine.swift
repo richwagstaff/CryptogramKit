@@ -151,8 +151,8 @@ open class CryptogramGameEngine: ObservableObject {
         }
 
         if previousSolvedCodes != solvedCodes {
-            let codesNewlySolved = solvedCodes.filter { !previousSolvedCodes.contains($0) }
-            for code in codesNewlySolved {
+            let newlySolvedCodes = solvedCodes.filter { !previousSolvedCodes.contains($0) }
+            for code in newlySolvedCodes {
                 delegate?.didSolveCode(code, engine: self)
             }
         }
@@ -164,7 +164,6 @@ open class CryptogramGameEngine: ObservableObject {
     }
 
     open func isCompleted() -> Bool {
-        let items = items.filter { $0.type == .letter }
         return items.filter { $0.type == .letter }.allSatisfy { $0.isCorrect }
     }
 
