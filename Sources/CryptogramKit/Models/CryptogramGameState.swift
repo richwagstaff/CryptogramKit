@@ -8,8 +8,4 @@ public enum CryptogramGameState {
     var isFinished: Bool {
         self == .completed || self == .failed
     }
-
-    var hasFailed: Bool {
-        self == .failed
-    }
 }

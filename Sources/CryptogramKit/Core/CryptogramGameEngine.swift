@@ -108,33 +108,18 @@ open class CryptogramGameEngine: ObservableObject {
         items[index].setValue(value, updateInputtedAt: updateInputtedAt)
     }
 
-    open func revealAllItemsWithCode(_ code: String) {
-        let items = items.filter { $0.code == code }
+    @discardableResult open func revealCorrectAnswers(callDelegate: Bool = true) -> [CryptogramItem] {
+        let invalidItems = items.filter { $0.isFillable() && $0.value != $0.correctValue }
 
-        for item in items {
+        invalidItems.forEach { item in
             item.setValue(item.correctValue, updateInputtedAt: true)
         }
 
-        delegate?.didInputAnswers(into: items, engine: self)
-    }
-
-    open func revealAllRemainingItems(staggered: Bool = false, completion: (() -> Void)?) {
-        let items = items.filter { $0.isFillable() }.filter { $0.value != $0.correctValue }
-
-        if staggered {
-            let trigger = ScheduledTrigger(intervals: DefaultScheduledTriggerIntervals(count: items.count))
-            trigger.start { index in
-                guard index < items.count else { return }
-                let item = items[index]
-                item.setValue(item.correctValue, updateInputtedAt: true)
-                self.delegate?.didInputAnswers(into: [item], engine: self)
-            } completion: {
-                completion?()
-            }
+        if callDelegate {
+            delegate?.didInputAnswers(into: invalidItems, engine: self)
         }
-        else {
-            delegate?.didInputAnswers(into: items, engine: self)
-        }
+
+        return invalidItems
     }
 
     open func updateSolvedCodes() {

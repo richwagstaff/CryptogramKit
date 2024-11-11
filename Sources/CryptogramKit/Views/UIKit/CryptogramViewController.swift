@@ -306,6 +306,24 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
         }
     }
 
+    open func updateItemsSequentially(_ items: [CryptogramItem], completion: (() -> Void)?) {
+        let intervals = DefaultScheduledTriggerIntervals(count: items.count)
+        let trigger = ScheduledTrigger(intervals: intervals)
+
+        trigger.start { [weak self] index in
+            guard index < items.count else { return }
+            self?.didInputAnswers(into: [items[index]])
+
+            let nextIndex = index < items.count - 1 ? index + 1 : 0
+            let nextItem = items[nextIndex]
+            if let nextCell = self?.manager.firstIndexPath(whereId: nextItem.id) {
+                self?.cryptogramView.selectCell(at: nextCell, animated: true)
+            }
+        } completion: {
+            completion?()
+        }
+    }
+
     // MARK: - Actions
 
     @objc func showInstructions() {
@@ -412,17 +430,19 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
     }
 
     open func gameDidFinish(engine: CryptogramGameEngine) {
-        saveData()
-
-        if engine.state.hasFailed {
+        if engine.state == .failed {
             selectFirstIncorrectCell()
-            engine.revealAllRemainingItems(staggered: true) {
+
+            let revealedItems = engine.revealCorrectAnswers(callDelegate: false)
+            updateItemsSequentially(revealedItems) {
                 self.showCompleted(true, animated: true)
             }
         }
         else {
             showCompleted(true, animated: true)
         }
+
+        saveData()
     }
 
     public func selectFirstIncorrectCell() {
@@ -435,12 +455,15 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
     }
 
     public func didInputAnswers(into items: [CryptogramItem], engine: CryptogramGameEngine) {
-        let indexPaths = manager.indexPaths(whereIdIn: items.map { $0.id })
-
         DispatchQueue.main.async {
-            self.cryptogramView.reloadCells(at: indexPaths)
-            self.cryptogramView.selectNextCell(animated: true)
+            self.didInputAnswers(into: items)
         }
+    }
+
+    open func didInputAnswers(into items: [CryptogramItem]) {
+        let indexPaths = manager.indexPaths(whereIdIn: items.map { $0.id })
+        cryptogramView.reloadCells(at: indexPaths)
+        cryptogramView.selectNextCell(animated: true)
     }
 
     public func wrongAnswerInputted(engine: CryptogramGameEngine) {
@@ -453,6 +476,8 @@ open class CryptogramViewController: UIViewController, KeyboardControllerDelegat
     }
 
     public func didSolveCode(_ code: String, engine: CryptogramGameEngine) {
+        guard engine.state != .failed else { return }
+
         let items = engine.items.filter { $0.code == code }
         let itemIds = items.map { $0.id }
         let indexPaths = manager.indexPaths(whereIdIn: itemIds)
